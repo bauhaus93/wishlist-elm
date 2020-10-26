@@ -24,10 +24,12 @@ const ProductSchema = new mongoose.Schema(
     url: String,
     url_img: String,
     item_id: String,
+    first_seen: Number,
     source: { type: mongoose.Schema.Types.ObjectId, ref: "source" },
   },
   { collection: "product" }
 );
+
 const WishlistSchema = new mongoose.Schema(
   {
     _id: mongoose.Schema.Types.ObjectId,
@@ -56,7 +58,7 @@ module.exports.get_last_wishlist = (callback) => {
     .exec((err, res) => {
       if (err) {
         console.error(err);
-        callback({ message: "Coult not retrieved last wishlist" });
+        callback({ message: "Could not retrieve last wishlist" });
       } else {
         callback(res[0]);
       }

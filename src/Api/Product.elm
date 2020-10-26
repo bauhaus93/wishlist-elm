@@ -14,6 +14,7 @@ type alias Product =
     , url : String
     , url_img : String
     , item_id : String
+    , first_seen : Int
     , source : Source.Source
     }
 
@@ -28,4 +29,5 @@ decoder =
         |> required "url" D.string
         |> required "url_img" D.string
         |> required "item_id" D.string
+        |> required "first_seen" D.int
         |> required "source" Source.decoder
