@@ -2,7 +2,7 @@ ELM = npx elm
 UGLIFY = npx uglifyjs
 WWW_DIR = public
 
-all: $(WWW_DIR)/elm.js
+all: npm $(WWW_DIR)/elm.js
 
 run: $(WWW_DIR)/elm.js
 	node app.js
