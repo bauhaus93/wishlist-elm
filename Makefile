@@ -7,6 +7,9 @@ all: $(WWW_DIR)/elm.js
 run: $(WWW_DIR)/elm.js
 	node app.js
 
+deploy: $(WWW_DIR)/elm.js
+	git push heroku main
+
 .PHONY: npm
 npm:
 	npm install
