@@ -21,6 +21,9 @@
     "mongodb": "^3.6.2",
     "mongoose": "^5.10.10",
     "node": "^15.0.1",
+    "prerender": "^5.8.0",
+    "prerender-node": "^3.2.5",
+    "redis": "^3.0.2",
     "request": "^2.88.2",
     "uglifyjs": "^2.4.11"
   }

@@ -64,3 +64,18 @@ module.exports.get_last_wishlist = (callback) => {
       }
     });
 };
+
+module.exports.get_newest_products = (callback) => {
+  Product.find(null, "-_id")
+    .sort({ first_seen: "desc" })
+    .limit(5)
+    .populate({ path: "source", select: "-_id" })
+    .exec((err, res) => {
+      if (err) {
+        console.error(err);
+        callback({ message: "Could not retrieve newest products" });
+      } else {
+        callback(res);
+      }
+    });
+};

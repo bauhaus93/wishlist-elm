@@ -1,4 +1,4 @@
-module Api.Product exposing (Product, decoder)
+module Api.Product exposing (Product, decoder, list_decoder)
 
 import Api.Source as Source
 import Json.Decode as D
@@ -31,3 +31,8 @@ decoder =
         |> required "item_id" D.string
         |> required "first_seen" D.int
         |> required "source" Source.decoder
+
+
+list_decoder : D.Decoder (List Product)
+list_decoder =
+    D.list decoder

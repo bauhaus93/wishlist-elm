@@ -1,4 +1,4 @@
-module Page exposing (Page(..), view)
+module Page exposing (Page(..), ViewInfo, view)
 
 import Browser
 import Html exposing (..)
@@ -8,17 +8,26 @@ import Route
 
 type Page
     = Home
+    | NewProducts
+    | Error
     | Other
 
 
-view : Page -> { title : String, content : Html msg } -> Browser.Document msg
-view page { title, content } =
+type alias ViewInfo msg =
+    { title : String
+    , caption : String
+    , content : Html msg
+    }
+
+
+view : Page -> ViewInfo msg -> Browser.Document msg
+view page { title, caption, content } =
     { title = title
     , body =
         view_navbar
             :: [ div [ class "container" ]
-                    [ div [ class "row my-3" ]
-                        [ div [ class "col" ] [ content ] ]
+                    [ div [ class "row my-3" ] [ div [ class "col" ] [ h1 [] [ text caption ] ] ]
+                    , div [ class "row my-3" ] [ div [ class "col" ] [ content ] ]
                     ]
                ]
     }
@@ -26,7 +35,9 @@ view page { title, content } =
 
 navbar_elements : List { route : Route.Route, label : String }
 navbar_elements =
-    [ { route = Route.Home, label = "Index" } ]
+    [ { route = Route.Home, label = "Aktuell" }
+    , { route = Route.NewProducts, label = "Neues" }
+    ]
 
 
 view_navbar : Html msg

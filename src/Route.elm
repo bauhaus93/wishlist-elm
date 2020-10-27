@@ -1,19 +1,22 @@
-module Route exposing (Route(..), from_url, parser, to_string)
+module Route exposing (Route(..), from_url, parser, replace_url, to_string)
 
+import Browser.Navigation as Nav
 import Url
 import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, top)
 
 
 type Route
     = Home
-    | ApiLastWishlist
+    | NewProducts
+    | Error
 
 
 parser : Parser (Route -> a) a
 parser =
     oneOf
         [ map Home top
-        , map ApiLastWishlist (s "api" </> s "wishlist" </> s "last")
+        , map NewProducts (s "new")
+        , map Error (s "error")
         ]
 
 
@@ -31,7 +34,15 @@ to_string route =
                 Home ->
                     []
 
-                ApiLastWishlist ->
-                    [ "api", "wishlist", "last" ]
+                NewProducts ->
+                    [ "new" ]
+
+                Error ->
+                    [ "error" ]
     in
     "/" ++ String.join "/" pieces
+
+
+replace_url : Nav.Key -> Route -> Cmd msg
+replace_url key route =
+    Nav.replaceUrl key (to_string route)
