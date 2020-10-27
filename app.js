@@ -1,11 +1,10 @@
 require("dotenv").config();
 const compression = require("compression");
 const express = require("express");
-
 const { get_last_wishlist } = require("./models");
 
+const port = process.env.PORT;
 const app = express();
-const port = 8080;
 
 app.use(compression());
 app.use((req, res, next) => {
