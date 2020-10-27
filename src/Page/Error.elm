@@ -37,7 +37,7 @@ view model =
                     view_error e
 
                 Nothing ->
-                    h2 [] [ text "Alles ok" ]
+                   h2 [] [ text "Alles ok" ]
     in
     { title = "Fehler"
     , caption = "Fehler"
