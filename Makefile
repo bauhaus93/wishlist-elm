@@ -1,6 +1,6 @@
 ELM = npx elm
 UGLIFY = npx uglifyjs
-WWW_DIR = www
+WWW_DIR = public
 
 all: $(WWW_DIR)/elm.js
 

@@ -15,7 +15,7 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, "public")));
-const routes = require("./routes");
+const routes = require(path.join(__dirname, "routes"));
 routes(app);
 
 app.listen(port, () => {
