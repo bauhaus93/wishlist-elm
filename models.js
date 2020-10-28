@@ -1,9 +1,19 @@
 const mongoose = require("mongoose");
 
-mongoose.connect(process.env.DB_URL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+if (!process.env.DB_URL) {
+  console.error("No DB_URL environment variable supplied!");
+  process.exit(1);
+}
+
+mongoose
+  .connect(process.env.DB_URL, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .catch((err) => {
+    console.log("Mongoose Error: ", err);
+    process.exit(1);
+  });
 
 const SourceSchema = new mongoose.Schema(
   {
@@ -44,7 +54,10 @@ const Source = mongoose.model("source", SourceSchema);
 const Product = mongoose.model("product", ProductSchema);
 const Wishlist = mongoose.model("wishlist", WishlistSchema);
 
-mongoose.connection;
+mongoose.connection.on("error", (err) => {
+  console.error("Mongoose Error:", err);
+  process.exit(1);
+});
 
 module.exports.get_last_wishlist = (callback) => {
   Wishlist.find(null, "-_id")

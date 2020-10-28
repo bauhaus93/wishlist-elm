@@ -1,11 +1,10 @@
 {
   "name": "wishlist",
   "version": "1.0.0",
-  "description": "",
+  "description": "Application for showing Amazon wishlists",
   "main": "app.js",
   "scripts": {
-    "start": "make && node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js"
   },
   "author": "Jakob Fischer",
   "license": "BSD-2-Clause",
@@ -17,6 +16,6 @@
     "mongoose": "^5.10.10",
     "node": "^15.0.1",
     "path": "^0.12.7",
-    "uglifyjs": "^2.4.11"
+    "uglify-js": "^3.11.4"
   }
 }
