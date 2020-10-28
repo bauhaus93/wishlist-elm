@@ -6,6 +6,7 @@ import Error
 import Html exposing (..)
 import Http
 import Page
+import Page.Archive as Archive
 import Page.Empty as Empty
 import Page.Error as Error
 import Page.Home as Home
@@ -17,6 +18,7 @@ import Url
 type Model
     = Home Home.Model
     | NewProducts NewProducts.Model
+    | Archive Archive.Model
     | Error Error.Model
     | Redirect Nav.Key
 
@@ -26,6 +28,7 @@ type Msg
     | LinkClicked Browser.UrlRequest
     | GotHomeMsg Home.Msg
     | GotNewProductsMsg NewProducts.Msg
+    | GotArchiveMsg Archive.Msg
     | GotErrorMsg Error.Msg
 
 
@@ -50,6 +53,10 @@ update msg model =
         ( GotNewProductsMsg sub_msg, NewProducts new_products ) ->
             NewProducts.update sub_msg new_products
                 |> update_with NewProducts GotNewProductsMsg model
+
+        ( GotArchiveMsg sub_msg, Archive archive ) ->
+            Archive.update sub_msg archive
+                |> update_with Archive GotArchiveMsg model
 
         ( GotErrorMsg sub_msg, Error error ) ->
             Error.update sub_msg error
@@ -84,6 +91,9 @@ view model =
         NewProducts new_products ->
             view_page Page.NewProducts GotNewProductsMsg (NewProducts.view new_products)
 
+        Archive archive ->
+            view_page Page.Archive GotArchiveMsg (Archive.view archive)
+
         Error error ->
             view_page Page.Error GotErrorMsg (Error.view error)
 
@@ -100,6 +110,9 @@ to_nav_key model =
         NewProducts new_products ->
             NewProducts.to_nav_key new_products
 
+        Archive archive ->
+            Archive.to_nav_key archive
+
         Error error ->
             Error.to_nav_key error
 
@@ -115,6 +128,9 @@ to_last_error model =
 
         NewProducts new_products ->
             NewProducts.to_last_error new_products
+
+        Archive archive ->
+            Archive.to_last_error archive
 
         Error error ->
             Error.to_last_error error
@@ -137,6 +153,10 @@ change_route maybe_route model =
         Just Route.NewProducts ->
             NewProducts.init (to_nav_key model)
                 |> update_with NewProducts GotNewProductsMsg model
+
+        Just Route.Archive ->
+            Archive.init (to_nav_key model)
+                |> update_with Archive GotArchiveMsg model
 
         Just Route.Error ->
             case to_last_error model of

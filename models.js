@@ -132,6 +132,7 @@ module.exports.get_archive_size = (callback) => {
               console.error(err);
               callback({ message: "Could not retrieve archive size" });
             } else {
+              cache.set("archive_size", res);
               callback({ size: res });
             }
           });
@@ -140,33 +141,32 @@ module.exports.get_archive_size = (callback) => {
 };
 
 module.exports.get_archived_products = (page, items_per_page, callback) => {
-  cached_request(
-    "product_archive_" + page.toString() + "_" + page.items_per_page.toString(),
-    callback,
-    () => {
-      Wishlist.find(null)
-        .sort({ timestamp: "desc" })
-        .limit(1)
-        .populate({ path: "products", select: "_id" })
-        .exec((err, res) => {
-          var active_products = [];
-          if (res && res[0]) {
-            active_products = res[0].products;
-          }
-          Product.find({ _id: { $nin: active_products } }, "-_id")
-            .sort({ first_seen: "desc" })
-            .skip((page - 1) * items_per_page)
-            .limit(items_per_page)
-            .populate({ path: "source", select: "-_id" })
-            .exec((err, res) => {
-              if (err) {
-                console.error(err);
-                callback({ message: "Could not retrieve archived products" });
-              } else {
-                callback(res);
-              }
-            });
-        });
-    }
-  );
+  var cache_name =
+    "product_archive_" + page.toString() + "_" + items_per_page.toString();
+  cached_request(cache_name, callback, () => {
+    Wishlist.find(null)
+      .sort({ timestamp: "desc" })
+      .limit(1)
+      .populate({ path: "products", select: "_id" })
+      .exec((err, res) => {
+        var active_products = [];
+        if (res && res[0]) {
+          active_products = res[0].products;
+        }
+        Product.find({ _id: { $nin: active_products } }, "-_id")
+          .sort({ first_seen: "desc" })
+          .skip((page - 1) * items_per_page)
+          .limit(items_per_page)
+          .populate({ path: "source", select: "-_id" })
+          .exec((err, res) => {
+            if (err) {
+              console.error(err);
+              callback({ message: "Could not retrieve archived products" });
+            } else {
+              cache.set(cache_name, res);
+              callback(res);
+            }
+          });
+      });
+  });
 };

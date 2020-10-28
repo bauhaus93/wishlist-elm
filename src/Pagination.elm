@@ -1,4 +1,4 @@
-module Pagination exposing (Model, Msg)
+module Pagination exposing (Model, Msg(..), init, to_items, update, view)
 
 import ApiRoute exposing (ApiRoute)
 import Error
@@ -11,6 +11,7 @@ import Json.Decode as D
 
 type Msg a
     = GotItems (Result Http.Error (List a))
+    | ExactPage Int
     | NextPage
     | PrevPage
 
@@ -19,7 +20,7 @@ type alias Model a =
     { items : List a
     , last_error : Maybe Error.Error
     , curr_page : Int
-    , max_page : Int
+    , max_page : Maybe Int
     , request_route : Int -> ApiRoute
     , decoder : D.Decoder a
     }
@@ -33,6 +34,9 @@ update msg model =
 
         PrevPage ->
             prev_page model
+
+        ExactPage page ->
+            request_page model page
 
         GotItems result ->
             case result of
@@ -48,11 +52,22 @@ view model =
     div [ class "row my-3" ]
         [ div [ class "col" ]
             [ div [ class "btn-group" ]
-                [ a [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
-                , a [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
+                [ button [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
+                , button [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
                 ]
             ]
         ]
+
+
+init : (Int -> ApiRoute) -> Maybe Int -> D.Decoder a -> Model a
+init request_route maybe_max_page decoder =
+    { items = []
+    , last_error = Nothing
+    , curr_page = 1
+    , max_page = maybe_max_page
+    , request_route = request_route
+    , decoder = decoder
+    }
 
 
 to_items : Model a -> List a

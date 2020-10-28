@@ -8,6 +8,7 @@ import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, top)
 type Route
     = Home
     | NewProducts
+    | Archive
     | Error
 
 
@@ -16,6 +17,7 @@ parser =
     oneOf
         [ map Home top
         , map NewProducts (s "new")
+        , map Archive (s "archive")
         , map Error (s "error")
         ]
 
@@ -36,6 +38,9 @@ to_string route =
 
                 NewProducts ->
                     [ "new" ]
+
+                Archive ->
+                    [ "archive" ]
 
                 Error ->
                     [ "error" ]

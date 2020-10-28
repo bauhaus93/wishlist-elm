@@ -9,6 +9,7 @@ import Route
 type Page
     = Home
     | NewProducts
+    | Archive
     | Error
     | Other
 
@@ -37,6 +38,7 @@ navbar_elements : List { route : Route.Route, label : String }
 navbar_elements =
     [ { route = Route.Home, label = "Aktuell" }
     , { route = Route.NewProducts, label = "Neues" }
+    , { route = Route.Archive, label = "Archive" }
     ]
 
 

@@ -1,4 +1,4 @@
-module Page.NewProducts exposing (..)
+module Page.Archive exposing (Model, Msg, init, to_last_error, to_nav_key, update, view)
 
 import Api.Product exposing (Product)
 import ApiRoute
@@ -14,20 +14,19 @@ import ProductTable exposing (view_product_table)
 import Route
 import Task
 import Time
-import Utility exposing (timestamp_to_dmy)
+import Utility exposing (timestamp_to_dmy, wrap_row_col)
 
 
 type alias Model =
     { nav_key : Nav.Key
     , time : Maybe Int
-    , product_pagination : Maybe (Pagination.Model Product)
+    , pagination : Pagination.Model Product
     , last_error : Maybe Error.Error
     }
 
 
 type Msg
-    = RequestNewProducts
-    | GotNewProducts (Result Http.Error (List Product))
+    = GotPaginationMsg (Pagination.Msg Product)
     | GotTime Time.Posix
 
 
@@ -35,18 +34,30 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotTime time ->
-            ( { model | time = Just (Time.posixToMillis time // 1000) }, request_new_products )
+            let
+                pagination_update =
+                    Pagination.update (Pagination.ExactPage 1) model.pagination
 
-        GotNewProducts result ->
-            case result of
-                Ok products ->
-                    ( { model | new_products = Just products }, Cmd.none )
+                pagination_cmd =
+                    Tuple.second pagination_update
 
-                Err e ->
-                    ( { model | last_error = Just (Error.HttpRequest e) }, Route.replace_url (to_nav_key model) Route.Error )
+                pagination_mod =
+                    Tuple.first pagination_update
+            in
+            ( { model | time = Just (Time.posixToMillis time // 1000), pagination = pagination_mod }, Cmd.map GotPaginationMsg pagination_cmd )
 
-        RequestNewProducts ->
-            ( model, request_new_products )
+        GotPaginationMsg sub_msg ->
+            let
+                pagination_update =
+                    Pagination.update sub_msg model.pagination
+
+                pagination_model =
+                    Tuple.first pagination_update
+
+                pagination_msg =
+                    Tuple.second pagination_update
+            in
+            ( { model | pagination = pagination_model }, Cmd.map GotPaginationMsg pagination_msg )
 
 
 subscriptions : Model -> Sub Msg
@@ -57,18 +68,24 @@ subscriptions model =
 view : Model -> ViewInfo Msg
 view model =
     let
-        product_table =
-            case model.new_products of
-                Just products ->
-                    view_product_table model.time products
+        pagination =
+            Pagination.view model.pagination
+                |> Html.map GotPaginationMsg
 
-                Nothing ->
-                    h2 [] [ text "Lade Produkte..." ]
+        product_table =
+            view_product_table model.time (Pagination.to_items model.pagination)
     in
     { title = "Neuheiten"
     , caption = "Neuheiten"
-    , content = product_table
+    , content = div [] [ wrap_row_col product_table, wrap_row_col pagination ]
     }
+
+
+update_with : (sub_model -> Model) -> (sub_msg -> Msg) -> Model -> ( sub_model, Cmd sub_msg ) -> ( Model, Cmd Msg )
+update_with to_model to_msg model ( sub_model, sub_cmd ) =
+    ( to_model sub_model
+    , Cmd.map to_msg sub_cmd
+    )
 
 
 to_nav_key : Model -> Nav.Key
@@ -81,19 +98,11 @@ to_last_error model =
     model.last_error
 
 
-request_new_products : Cmd Msg
-request_new_products =
-    Http.get
-        { url = ApiRoute.to_string ApiRoute.NewProducts
-        , expect = Http.expectJson GotNewProducts Api.Product.list_decoder
-        }
-
-
 init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     ( { nav_key = nav_key
       , time = Nothing
-      , product_pagination = Nothing
+      , pagination = Pagination.init (\p -> ApiRoute.ProductArchive (Just p)) Nothing Api.Product.decoder
       , last_error = Nothing
       }
     , Task.perform GotTime Time.now

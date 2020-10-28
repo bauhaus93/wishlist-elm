@@ -45,10 +45,10 @@ to_string route =
                 ProductArchive maybe_page ->
                     case maybe_page of
                         Just page ->
-                            [ String.fromInt page ]
+                            [ ( "page", String.fromInt page ) ]
 
                         Nothing ->
-                            [ "0" ]
+                            [ ( "page", "1" ) ]
 
                 _ ->
                     []
@@ -59,6 +59,7 @@ to_string route =
                     ""
 
                 _ ->
-                    "?" ++ String.join "&" query_pieces
+                    "?"
+                        ++ String.join "&" (List.map (\p -> Tuple.first p ++ "=" ++ Tuple.second p) query_pieces)
     in
     "/" ++ String.join "/" path_pieces ++ query
