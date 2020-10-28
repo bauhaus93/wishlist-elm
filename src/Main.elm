@@ -2,6 +2,7 @@ module Main exposing (Model(..), Msg(..), change_route, init, main, subscription
 
 import Browser
 import Browser.Navigation as Nav
+import Error
 import Html exposing (..)
 import Http
 import Page
@@ -106,7 +107,7 @@ to_nav_key model =
             nav_key
 
 
-to_last_error : Model -> Maybe Http.Error
+to_last_error : Model -> Maybe Error.Error
 to_last_error model =
     case model of
         Home home ->
@@ -138,8 +139,13 @@ change_route maybe_route model =
                 |> update_with NewProducts GotNewProductsMsg model
 
         Just Route.Error ->
-            Error.init (to_nav_key model) (to_last_error model)
-                |> update_with Error GotErrorMsg model
+            case to_last_error model of
+                Just err ->
+                    Error.init (to_nav_key model) err
+                        |> update_with Error GotErrorMsg model
+
+                Nothing ->
+                    change_route (Just Route.Home) model
 
 
 update_with : (sub_model -> Model) -> (sub_msg -> Msg) -> Model -> ( sub_model, Cmd sub_msg ) -> ( Model, Cmd Msg )

@@ -5,6 +5,7 @@ import Api.Wishlist exposing (Wishlist)
 import ApiRoute
 import Browser
 import Browser.Navigation as Nav
+import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
@@ -20,7 +21,7 @@ type alias Model =
     { nav_key : Nav.Key
     , time : Maybe Int
     , last_wishlist : Maybe Wishlist
-    , last_error : Maybe Http.Error
+    , last_error : Maybe Error.Error
     }
 
 
@@ -42,7 +43,7 @@ update msg model =
                     ( { model | last_wishlist = Just wishlist }, Cmd.none )
 
                 Err e ->
-                    ( { model | last_error = Just e }, Nav.pushUrl (to_nav_key model) (Route.to_string Route.Error) )
+                    ( { model | last_error = Just (Error.HttpRequest e) }, Nav.pushUrl (to_nav_key model) (Route.to_string Route.Error) )
 
         RequestLastWishlist ->
             ( model, request_last_wishlist )
@@ -83,7 +84,7 @@ to_nav_key model =
     model.nav_key
 
 
-to_last_error : Model -> Maybe Http.Error
+to_last_error : Model -> Maybe Error.Error
 to_last_error model =
     model.last_error
 

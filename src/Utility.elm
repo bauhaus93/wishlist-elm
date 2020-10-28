@@ -1,6 +1,13 @@
-module Utility exposing (month_to_num, timestamp_to_dmy)
+module Utility exposing (month_to_num, timestamp_to_dmy, wrap_row_col)
 
+import Html exposing (..)
+import Html.Attributes exposing (..)
 import Time
+
+
+wrap_row_col : Html msg -> Html msg
+wrap_row_col wrapped_html =
+    div [ class "row" ] [ div [ class "col" ] [ wrapped_html ] ]
 
 
 timestamp_to_dmy : Int -> String

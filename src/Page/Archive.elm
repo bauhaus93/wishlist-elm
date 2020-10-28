@@ -9,6 +9,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Http
 import Page exposing (ViewInfo)
+import Pagination
 import ProductTable exposing (view_product_table)
 import Route
 import Task
@@ -19,7 +20,7 @@ import Utility exposing (timestamp_to_dmy)
 type alias Model =
     { nav_key : Nav.Key
     , time : Maybe Int
-    , new_products : Maybe (List Product)
+    , product_pagination : Maybe (Pagination.Model Product)
     , last_error : Maybe Error.Error
     }
 
@@ -92,7 +93,7 @@ init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     ( { nav_key = nav_key
       , time = Nothing
-      , new_products = Nothing
+      , product_pagination = Nothing
       , last_error = Nothing
       }
     , Task.perform GotTime Time.now

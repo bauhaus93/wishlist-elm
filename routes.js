@@ -1,7 +1,11 @@
-const { get_last_wishlist, get_newest_products } = require("./service");
+const path = require("path");
+const {
+  get_last_wishlist,
+  get_newest_products,
+  get_archived_products,
+} = require("./service");
 
 function success_handler(json_result, response) {
-  response.set("Content-Type", "application/json");
   response.send(JSON.stringify(json_result));
   response.end();
 }
@@ -17,5 +21,17 @@ module.exports = (app) => {
     get_newest_products((prods) => {
       success_handler(prods, res);
     });
+  });
+
+  app.get("/api/product/archive", (req, res) => {
+    var page = req.query.page;
+    var items_per_page = req.query.items;
+    get_archived_products(page, items_per_page, (prods, max_page) => {
+      success_handler(prods, res);
+    });
+  });
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
   });
 };
