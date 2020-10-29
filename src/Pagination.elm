@@ -41,7 +41,12 @@ update msg model =
         GotItems result ->
             case result of
                 Ok items ->
-                    ( { model | items = items }, Cmd.none )
+                    case List.length items of
+                        0 ->
+                            ( { model | curr_page = model.curr_page - 1, max_page = Just (model.curr_page - 1) }, Cmd.none )
+
+                        _ ->
+                            ( { model | items = items }, Cmd.none )
 
                 Err e ->
                     ( { model | last_error = Just (Error.HttpRequest e) }, Cmd.none )
@@ -49,10 +54,21 @@ update msg model =
 
 view : Model a -> Html (Msg a)
 view model =
+    let
+        page_buttons =
+            case model.max_page of
+                Just max ->
+                    List.map (\i -> view_page_entry i model.curr_page) (List.range 1 max)
+                        |> div []
+
+                Nothing ->
+                    div [] []
+    in
     div [ class "row my-3" ]
-        [ div [ class "col" ]
+        [ div [ class "col text-center" ]
             [ div [ class "btn-group" ]
                 [ button [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
+                , page_buttons
                 , button [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
                 ]
             ]
@@ -70,6 +86,19 @@ init request_route maybe_max_page decoder =
     }
 
 
+view_page_entry : Int -> Int -> Html (Msg a)
+view_page_entry entry_page curr_page =
+    let
+        weight =
+            if entry_page == curr_page then
+                " font-weight-bold active"
+
+            else
+                ""
+    in
+    button [ class ("btn btn-secondary" ++ weight), onClick (ExactPage entry_page), attribute "style" "border-radius: 0px;" ] [ text (String.fromInt entry_page) ]
+
+
 to_items : Model a -> List a
 to_items pagination =
     pagination.items
@@ -77,12 +106,35 @@ to_items pagination =
 
 next_page : Model a -> ( Model a, Cmd (Msg a) )
 next_page pagination =
-    request_page pagination (pagination.curr_page + 1)
+    let
+        has_next =
+            case pagination.max_page of
+                Just max ->
+                    pagination.curr_page < max
+
+                Nothing ->
+                    True
+    in
+    case has_next of
+        True ->
+            request_page pagination (pagination.curr_page + 1)
+
+        False ->
+            ( pagination, Cmd.none )
 
 
 prev_page : Model a -> ( Model a, Cmd (Msg a) )
 prev_page pagination =
-    request_page pagination (pagination.curr_page - 1)
+    let
+        has_prev =
+            pagination.curr_page > 1
+    in
+    case has_prev of
+        True ->
+            request_page pagination (pagination.curr_page - 1)
+
+        False ->
+            ( pagination, Cmd.none )
 
 
 request_page : Model a -> Int -> ( Model a, Cmd (Msg a) )

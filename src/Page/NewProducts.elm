@@ -18,7 +18,6 @@ import Utility exposing (timestamp_to_dmy)
 
 type alias Model =
     { nav_key : Nav.Key
-    , time : Maybe Int
     , new_products : Maybe (List Product)
     , last_error : Maybe Error.Error
     }
@@ -27,15 +26,11 @@ type alias Model =
 type Msg
     = RequestNewProducts
     | GotNewProducts (Result Http.Error (List Product))
-    | GotTime Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotTime time ->
-            ( { model | time = Just (Time.posixToMillis time // 1000) }, request_new_products )
-
         GotNewProducts result ->
             case result of
                 Ok products ->
@@ -59,10 +54,10 @@ view model =
         product_table =
             case model.new_products of
                 Just products ->
-                    view_product_table model.time products
+                    view_product_table products
 
                 Nothing ->
-                    h2 [] [ text "Lade Produkte..." ]
+                    div [] []
     in
     { title = "Neuheiten"
     , caption = "Neuheiten"
@@ -91,9 +86,8 @@ request_new_products =
 init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     ( { nav_key = nav_key
-      , time = Nothing
       , new_products = Nothing
       , last_error = Nothing
       }
-    , Task.perform GotTime Time.now
+    , request_new_products
     )

@@ -7,8 +7,8 @@ import Time
 import Utility exposing (month_to_num, timestamp_to_dmy)
 
 
-view_product_table : Maybe Int -> List Product -> Html msg
-view_product_table maybe_time products =
+view_product_table : List Product -> Html msg
+view_product_table products =
     let
         items =
             List.sortBy (\p -> p.price) products
@@ -24,8 +24,8 @@ view_product_table maybe_time products =
                 ]
             , view_row "Wert" <| text (get_price_quantity prod)
             , view_row "Zweck" <| a [ href prod.source.url, target "_blank" ] [ text prod.source.name ]
-            , view_row "Vorhanden seit" <| text (get_first_seen prod)
-            , view_row "Dauer" <| text (get_duration prod maybe_time)
+            , view_row "Vorhanden" <| text (get_date_range prod)
+            , view_row "Dauer" <| text (get_duration prod)
             ]
 
         view_row : String -> Html msg -> Html msg
@@ -57,21 +57,26 @@ get_price_quantity prod =
         ]
 
 
+get_date_range : Product -> String
+get_date_range prod =
+    get_first_seen prod ++ " - " ++ get_last_seen prod
+
+
 get_first_seen : Product -> String
 get_first_seen prod =
     timestamp_to_dmy prod.first_seen
 
 
-get_duration : Product -> Maybe Int -> String
-get_duration prod maybe_now =
+get_last_seen : Product -> String
+get_last_seen prod =
+    timestamp_to_dmy prod.last_seen
+
+
+get_duration : Product -> String
+get_duration prod =
     let
         duration =
-            case maybe_now of
-                Just now ->
-                    now - prod.first_seen
-
-                Nothing ->
-                    0
+            prod.last_seen - prod.first_seen
 
         thresholds =
             [ { t = 7 * 24 * 3600, u = "Wochen" }

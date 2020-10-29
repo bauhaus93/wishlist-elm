@@ -60,10 +60,10 @@ view model =
         product_table =
             case model.last_wishlist of
                 Just last_wishlist ->
-                    [ view_wishlist_info last_wishlist, view_product_table model.time last_wishlist.products ]
+                    [ view_wishlist_info last_wishlist, view_product_table last_wishlist.products ]
 
                 Nothing ->
-                    [ h2 [] [ text "Lade Wunschliste..." ] ]
+                    []
 
         time_string =
             case model.time of

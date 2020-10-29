@@ -19,7 +19,6 @@ import Utility exposing (timestamp_to_dmy, wrap_row_col)
 
 type alias Model =
     { nav_key : Nav.Key
-    , time : Maybe Int
     , pagination : Pagination.Model Product
     , last_error : Maybe Error.Error
     }
@@ -27,37 +26,14 @@ type alias Model =
 
 type Msg
     = GotPaginationMsg (Pagination.Msg Product)
-    | GotTime Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        GotTime time ->
-            let
-                pagination_update =
-                    Pagination.update (Pagination.ExactPage 1) model.pagination
-
-                pagination_cmd =
-                    Tuple.second pagination_update
-
-                pagination_mod =
-                    Tuple.first pagination_update
-            in
-            ( { model | time = Just (Time.posixToMillis time // 1000), pagination = pagination_mod }, Cmd.map GotPaginationMsg pagination_cmd )
-
         GotPaginationMsg sub_msg ->
-            let
-                pagination_update =
-                    Pagination.update sub_msg model.pagination
-
-                pagination_model =
-                    Tuple.first pagination_update
-
-                pagination_msg =
-                    Tuple.second pagination_update
-            in
-            ( { model | pagination = pagination_model }, Cmd.map GotPaginationMsg pagination_msg )
+            Pagination.update sub_msg model.pagination
+                |> update_with (\m -> \sm -> { m | pagination = sm }) GotPaginationMsg model
 
 
 subscriptions : Model -> Sub Msg
@@ -73,17 +49,17 @@ view model =
                 |> Html.map GotPaginationMsg
 
         product_table =
-            view_product_table model.time (Pagination.to_items model.pagination)
+            view_product_table (Pagination.to_items model.pagination)
     in
-    { title = "Neuheiten"
-    , caption = "Neuheiten"
+    { title = "Archiv"
+    , caption = "Archiv"
     , content = div [] [ wrap_row_col product_table, wrap_row_col pagination ]
     }
 
 
-update_with : (sub_model -> Model) -> (sub_msg -> Msg) -> Model -> ( sub_model, Cmd sub_msg ) -> ( Model, Cmd Msg )
+update_with : (Model -> sub_model -> Model) -> (sub_msg -> Msg) -> Model -> ( sub_model, Cmd sub_msg ) -> ( Model, Cmd Msg )
 update_with to_model to_msg model ( sub_model, sub_cmd ) =
-    ( to_model sub_model
+    ( to_model model sub_model
     , Cmd.map to_msg sub_cmd
     )
 
@@ -98,12 +74,25 @@ to_last_error model =
     model.last_error
 
 
+to_pagination : Model -> Pagination.Model Product
+to_pagination model =
+    model.pagination
+
+
 init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
-    ( { nav_key = nav_key
-      , time = Nothing
-      , pagination = Pagination.init (\p -> ApiRoute.ProductArchive (Just p)) Nothing Api.Product.decoder
-      , last_error = Nothing
-      }
-    , Task.perform GotTime Time.now
-    )
+    let
+        initial_pagination =
+            Pagination.init (\p -> ApiRoute.ProductArchive (Just p)) Nothing Api.Product.decoder
+
+        initial_model =
+            { nav_key = nav_key
+            , pagination = initial_pagination
+            , last_error = Nothing
+            }
+
+        updated_model =
+            Pagination.update (Pagination.ExactPage 1) initial_pagination
+                |> update_with (\m -> \sm -> { m | pagination = sm }) GotPaginationMsg initial_model
+    in
+    updated_model
