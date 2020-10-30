@@ -49,11 +49,18 @@ update msg model =
                 Ok { items, total_items } ->
                     let
                         maybe_max_page =
-                            case total_items of
-                                Just i ->
-                                    Just (ceiling (toFloat i / toFloat model.per_page))
+                            case ( total_items, model.max_page ) of
+                                ( Just new_max, Just old_max ) ->
+                                    Just new_max
 
-                                Nothing ->
+                                ( Just new_max, Nothing ) ->
+                                    total_items
+                                        |> Maybe.andThen (\i -> Just (ceiling (toFloat i / toFloat model.per_page)))
+
+                                ( Nothing, Just old_max ) ->
+                                    Just old_max
+
+                                ( Nothing, Nothing ) ->
                                     Nothing
                     in
                     case List.length items of
@@ -196,14 +203,5 @@ expect_json to_msg decoder =
 
 to_total_max_items : Http.Metadata -> Maybe Int
 to_total_max_items meta =
-    case Dict.get "X-Paging-TotalRecordCount" meta.headers of
-        Just total_str ->
-            case String.toInt total_str of
-                Just total ->
-                    Just total
-
-                Nothing ->
-                    Nothing
-
-        Nothing ->
-            Nothing
+    Dict.get "X-Paging-TotalRecordCount" meta.headers
+        |> Maybe.andThen String.toInt
