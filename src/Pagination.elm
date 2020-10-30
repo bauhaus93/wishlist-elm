@@ -77,7 +77,7 @@ update msg model =
 view : Model a -> Html (Msg a)
 view model =
     let
-        page_buttons =
+        page_direct_buttons =
             case model.max_page of
                 Just max ->
                     List.map (\i -> view_page_entry i model.curr_page) (List.range 1 max)
@@ -85,15 +85,23 @@ view model =
 
                 Nothing ->
                     div [] []
+
+        full_pagination =
+            case List.isEmpty model.items of
+                True ->
+                    []
+
+                False ->
+                    [ div [ class "btn-group" ]
+                        [ button [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
+                        , page_direct_buttons
+                        , button [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
+                        ]
+                    ]
     in
     div [ class "row my-3" ]
         [ div [ class "col text-center" ]
-            [ div [ class "btn-group" ]
-                [ button [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
-                , page_buttons
-                , button [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
-                ]
-            ]
+            full_pagination
         ]
 
 
