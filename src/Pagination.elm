@@ -1,6 +1,7 @@
 module Pagination exposing (Model, Msg(..), init, to_items, update, view)
 
 import ApiRoute exposing (ApiRoute)
+import Dict
 import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -10,7 +11,7 @@ import Json.Decode as D
 
 
 type Msg a
-    = GotItems (Result Http.Error (List a))
+    = GotItems (Result Http.Error (PaginatedResponse a))
     | ExactPage Int
     | NextPage
     | PrevPage
@@ -20,10 +21,15 @@ type alias Model a =
     { items : List a
     , last_error : Maybe Error.Error
     , curr_page : Int
+    , per_page : Int
     , max_page : Maybe Int
     , request_route : Int -> ApiRoute
     , decoder : D.Decoder a
     }
+
+
+type alias PaginatedResponse a =
+    { items : List a, total_items : Maybe Int }
 
 
 update : Msg a -> Model a -> ( Model a, Cmd (Msg a) )
@@ -40,13 +46,22 @@ update msg model =
 
         GotItems result ->
             case result of
-                Ok items ->
+                Ok { items, total_items } ->
+                    let
+                        maybe_max_page =
+                            case total_items of
+                                Just i ->
+                                    Just (ceiling (toFloat i / toFloat model.per_page))
+
+                                Nothing ->
+                                    Nothing
+                    in
                     case List.length items of
                         0 ->
                             ( { model | curr_page = model.curr_page - 1, max_page = Just (model.curr_page - 1) }, Cmd.none )
 
                         _ ->
-                            ( { model | items = items }, Cmd.none )
+                            ( { model | items = items, max_page = maybe_max_page }, Cmd.none )
 
                 Err e ->
                     ( { model | last_error = Just (Error.HttpRequest e) }, Cmd.none )
@@ -75,12 +90,13 @@ view model =
         ]
 
 
-init : (Int -> ApiRoute) -> Maybe Int -> D.Decoder a -> Model a
-init request_route maybe_max_page decoder =
+init : Int -> (Int -> ApiRoute) -> D.Decoder a -> Model a
+init per_page request_route decoder =
     { items = []
     , last_error = Nothing
-    , curr_page = 1
-    , max_page = maybe_max_page
+    , curr_page = 0
+    , per_page = per_page
+    , max_page = Nothing
     , request_route = request_route
     , decoder = decoder
     }
@@ -140,18 +156,54 @@ prev_page pagination =
 request_page : Model a -> Int -> ( Model a, Cmd (Msg a) )
 request_page model page_num =
     ( { model | curr_page = page_num }
-    , request_http (model.request_route page_num) (list_decoder model.decoder)
+    , request_http (model.request_route page_num) model.decoder
     )
 
 
-request_http : ApiRoute -> D.Decoder (List a) -> Cmd (Msg a)
+request_http : ApiRoute -> D.Decoder a -> Cmd (Msg a)
 request_http route decoder =
     Http.get
         { url = ApiRoute.to_string route
-        , expect = Http.expectJson GotItems decoder
+        , expect = expect_json GotItems decoder
         }
 
 
-list_decoder : D.Decoder a -> D.Decoder (List a)
-list_decoder decoder =
-    D.list decoder
+expect_json : (Result Http.Error (PaginatedResponse a) -> msg) -> D.Decoder a -> Http.Expect msg
+expect_json to_msg decoder =
+    Http.expectStringResponse to_msg <|
+        \response ->
+            case response of
+                Http.BadUrl_ url ->
+                    Err (Http.BadUrl url)
+
+                Http.Timeout_ ->
+                    Err Http.Timeout
+
+                Http.NetworkError_ ->
+                    Err Http.NetworkError
+
+                Http.BadStatus_ meta body ->
+                    Err (Http.BadStatus meta.statusCode)
+
+                Http.GoodStatus_ meta body ->
+                    case D.decodeString (D.list decoder) body of
+                        Ok value ->
+                            Ok { items = value, total_items = to_total_max_items meta }
+
+                        Err err ->
+                            Err (Http.BadBody (D.errorToString err))
+
+
+to_total_max_items : Http.Metadata -> Maybe Int
+to_total_max_items meta =
+    case Dict.get "X-Paging-TotalRecordCount" meta.headers of
+        Just total_str ->
+            case String.toInt total_str of
+                Just total ->
+                    Just total
+
+                Nothing ->
+                    Nothing
+
+        Nothing ->
+            Nothing

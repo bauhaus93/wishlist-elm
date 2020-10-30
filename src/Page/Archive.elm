@@ -83,7 +83,7 @@ init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     let
         initial_pagination =
-            Pagination.init (\p -> ApiRoute.ProductArchive (Just p)) Nothing Api.Product.decoder
+            Pagination.init 5 (\p -> ApiRoute.ProductArchive (Just p)) Api.Product.decoder
 
         initial_model =
             { nav_key = nav_key
