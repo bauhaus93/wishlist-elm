@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const NodeCache = require("node-cache");
 
 if (!process.env.DB_URL) {
   console.error("No DB_URL environment variable supplied!");
@@ -60,22 +59,9 @@ mongoose.connection.on("error", (err) => {
   process.exit(1);
 });
 
-var cache = new NodeCache({ stdTTL: 60 });
-
-function cached_request(name, on_hit_callback, fallback) {
-  var cached_value = cache.get(name);
-  if (cached_value) {
-    console.log("Cache hit for '" + name + "'");
-    on_hit_callback(cached_value);
-  } else {
-    console.log("Cache miss for '" + name + "'");
-    fallback();
-  }
-}
-
-module.exports.get_last_wishlist = (callback) => {
-  cached_request("last_wishlist", callback, () => {
-    Wishlist.find(null, "-_id")
+module.exports.get_last_wishlist = async () => {
+  return (
+    await Wishlist.find(null, "-_id")
       .sort({ timestamp: "desc" })
       .limit(1)
       .populate({
@@ -83,90 +69,40 @@ module.exports.get_last_wishlist = (callback) => {
         select: "-_id",
         populate: { path: "source", select: "-_id" },
       })
-      .exec((err, res) => {
-        if (err) {
-          console.error(err);
-          callback({ message: "Could not retrieve last wishlist" });
-        } else {
-          cache.set("last_wishlist", res[0]);
-          callback(res[0]);
-        }
-      });
-  });
+  )[0];
 };
 
-module.exports.get_newest_products = (callback) => {
-  cached_request("newest_products", callback, () => {
-    Product.find(null, "-_id")
-      .sort({ first_seen: "desc" })
-      .limit(5)
-      .populate({ path: "source", select: "-_id" })
-      .exec((err, res) => {
-        if (err) {
-          console.error(err);
-          callback({ message: "Could not retrieve newest products" });
-        } else {
-          cache.set("newest_products", res);
-          callback(res);
-        }
-      });
-  });
+module.exports.get_newest_products = async () => {
+  return await Product.find(null, "-_id")
+    .sort({ first_seen: "desc" })
+    .limit(10)
+    .populate({ path: "source", select: "-_id" });
 };
 
-module.exports.get_archive_size = (callback) => {
-  cached_request("archive_size", callback, () => {
-    Wishlist.find(null)
+module.exports.get_archive_size = async () => {
+  var last_wishlist_result = await Wishlist.find(null, { products: true })
+    .sort({ timestamp: "desc" })
+    .limit(1)
+    .populate({ path: "products", select: "_id" });
+  return await Product.find({
+    _id: { $nin: last_wishlist_result[0].products },
+  }).countDocuments();
+};
+
+module.exports.get_archived_products = async (page, items_per_page) => {
+  var last_wishlist_result = (
+    await Wishlist.find(null)
       .sort({ timestamp: "desc" })
       .limit(1)
       .populate({ path: "products", select: "_id" })
-      .exec((err, res) => {
-        var active_products = [];
-        if (res && res[0]) {
-          active_products = res[0].products;
-        }
-        Product.find({ _id: { $nin: active_products } }, "-_id")
-          .sort({ first_seen: "desc" })
-          .count()
-          .exec((err, res) => {
-            if (err) {
-              console.error(err);
-              callback({ message: "Could not retrieve archive size" });
-            } else {
-              cache.set("archive_size", res);
-              callback({ size: res });
-            }
-          });
-      });
-  });
-};
+  )[0];
 
-module.exports.get_archived_products = (page, items_per_page, callback) => {
-  var cache_name =
-    "product_archive_" + page.toString() + "_" + items_per_page.toString();
-  cached_request(cache_name, callback, () => {
-    Wishlist.find(null)
-      .sort({ timestamp: "desc" })
-      .limit(1)
-      .populate({ path: "products", select: "_id" })
-      .exec((err, res) => {
-        var active_products = [];
-        if (res && res[0]) {
-          active_products = res[0].products;
-        }
-        Product.find({ _id: { $nin: active_products } }, "-_id")
-          .sort({ first_seen: "desc" })
-          .skip((page - 1) * items_per_page)
-          .limit(items_per_page)
-          .populate({ path: "source", select: "-_id" })
-          .exec((err, res) => {
-            if (err) {
-              console.error(err);
-              callback({ message: "Could not retrieve archived products" });
-            } else {
-              cache.set(cache_name, res);
-              callback(res);
-            }
-          });
-      });
-  });
+  return await Product.find(
+    { _id: { $nin: last_wishlist_result.products } },
+    "-_id"
+  )
+    .sort({ first_seen: "desc" })
+    .skip((page - 1) * items_per_page)
+    .limit(items_per_page)
+    .populate({ path: "source", select: "-_id" });
 };

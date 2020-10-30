@@ -82,6 +82,7 @@ get_duration prod =
             [ { t = 7 * 24 * 3600, u = "Wochen" }
             , { t = 24 * 3600, u = "Tage" }
             , { t = 3600, u = "Stunden" }
+            , { t = 60, u = "Minuten" }
             , { t = 1, u = "Sekunden" }
             ]
     in
