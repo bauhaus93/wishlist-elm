@@ -48,7 +48,15 @@ view_navbar =
         list_items =
             List.map
                 (\{ route, label } ->
-                    li [ class "nav-item" ] [ a [ class "nav-link", href (Route.to_string route) ] [ text label ] ]
+                    li [ class "nav-item" ]
+                        [ a
+                            [ class "nav-link"
+                            , href (Route.to_string route)
+                            , attribute "data-toggle" "collapse"
+                            , attribute "data-target" "#navbarSupportedContent"
+                            ]
+                            [ text label ]
+                        ]
                 )
                 navbar_elements
 
