@@ -36,9 +36,9 @@ view page { title, caption, content } =
 
 navbar_elements : List { route : Route.Route, label : String }
 navbar_elements =
-    [ { route = Route.Home, label = "Aktuell" }
-    , { route = Route.NewProducts, label = "Neues" }
-    , { route = Route.Archive, label = "Archiv" }
+    [ { route = Route.Home, label = "{{ NAVBAR.HOME }}" }
+    , { route = Route.NewProducts, label = "{{ NAVBAR.NEW_PRODUCTS }}" }
+    , { route = Route.Archive, label = "{{ NAVBAR.ARCHIVE }}" }
     ]
 
 
@@ -65,7 +65,7 @@ view_navbar =
                 [ span [ class "navbar-toggler-icon" ] [] ]
     in
     nav [ class "navbar sticky-top navbar-expand-sm navbar-dark bg-dark" ]
-        [ a [ class "navbar-brand", href (Route.to_string Route.Home) ] [ text "Winglers Liste" ]
+        [ a [ class "navbar-brand", href (Route.to_string Route.Home) ] [ text "{{ NAVBAR.BRAND }}" ]
         , navbar_toggle_button
         , div [ class "collapse navbar-collapse mr-auto", id "navbarSupportedContent" ]
             [ ul [ class "navbar-nav", id "navigation" ] list_items

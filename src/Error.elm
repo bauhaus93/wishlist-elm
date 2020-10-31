@@ -18,34 +18,31 @@ view_error error =
             view_http_error err
 
         NotFound path ->
-            wrap_row_col <| h2 [] [ text <| "Seite '" ++ path ++ "' konnte etzadla nicht gefunden werden" ]
+            wrap_row_col <| h2 [] [ text <| "{{ERROR_MESSAGE.PAGE_NOT_FOUND}}: '" ++ path ++ "'" ]
 
 
 view_http_error : Http.Error -> Html msg
 view_http_error error =
-    h2 []
-        [ wrap_row_col <| text "Fehler bei HTTP Anfrage"
-        , wrap_row_col <|
-            case error of
-                Http.BadUrl str ->
-                    h3 [] [ text ("Ungültige URL:" ++ str) ]
+    wrap_row_col <|
+        case error of
+            Http.BadUrl str ->
+                h2 [] [ text ("{{ ERROR_MESSAGE.BAD_URL }}" ++ str) ]
 
-                Http.Timeout ->
-                    h3 [] [ text "Zeitüberschreitung bei Anfrage" ]
+            Http.Timeout ->
+                h2 [] [ text "{{ ERROR_MESSAGE.TIMEOUT }}" ]
 
-                Http.NetworkError ->
-                    h3 [] [ text "Konnte keine Verbindung herstellen" ]
+            Http.NetworkError ->
+                h2 [] [ text "{{ ERROR_MESSAGE.NETWORK_ERROR }}" ]
 
-                Http.BadStatus status ->
-                    h3 []
-                        [ text <|
-                            "HTTP "
-                                ++ String.fromInt status
-                        ]
+            Http.BadStatus status ->
+                h2 []
+                    [ text <|
+                        "{{ ERROR_MESSAGE.BAD_STATUS }} "
+                            ++ String.fromInt status
+                    ]
 
-                Http.BadBody msg ->
-                    div []
-                        [ wrap_row_col <| h2 [] [ text "Unerwarteter Inhalt" ]
-                        , wrap_row_col <| text msg
-                        ]
-        ]
+            Http.BadBody msg ->
+                div []
+                    [ wrap_row_col <| h2 [] [ text "{{ ERROR_MESSAGE.BAD_BODY }}" ]
+                    , wrap_row_col <| text msg
+                    ]

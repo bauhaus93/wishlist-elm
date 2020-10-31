@@ -19,13 +19,13 @@ view_product_table products =
         to_list_item : Product -> List (Html msg)
         to_list_item prod =
             [ tr []
-                [ td [] [ img [ src prod.url_img, class "img-responsive", alt "Produktbild" ] [] ]
+                [ td [] [ img [ src prod.url_img, class "img-responsive", alt "{{ PRODUCT_IMG_ALT }}" ] [] ]
                 , th [ attribute "colspan" "2", class "align-middle" ] [ a [ href prod.url, target "_blank" ] [ text prod.name ] ]
                 ]
-            , view_row "Wert" <| text (get_price_quantity prod)
-            , view_row "Zweck" <| a [ href prod.source.url, target "_blank" ] [ text prod.source.name ]
-            , view_row "Vorhanden" <| text (get_date_range prod)
-            , view_row "Dauer" <| text (get_duration prod)
+            , view_row "{{ LABEL.VALUE }}" <| text (get_price_quantity prod)
+            , view_row "{{ LABEL.WISHLIST_NAME }}" <| a [ href prod.source.url, target "_blank" ] [ text prod.source.name ]
+            , view_row "{{ LABEL.DATE_RANGE }}" <| text (get_date_range prod)
+            , view_row "{{ LABEL.DURATION }}" <| text (get_duration prod)
             ]
 
         view_row : String -> Html msg -> Html msg
@@ -79,11 +79,11 @@ get_duration prod =
             prod.last_seen - prod.first_seen
 
         thresholds =
-            [ { t = 7 * 24 * 3600, u = "Wochen" }
-            , { t = 24 * 3600, u = "Tage" }
-            , { t = 3600, u = "Stunden" }
-            , { t = 60, u = "Minuten" }
-            , { t = 1, u = "Sekunden" }
+            [ { t = 7 * 24 * 3600, u = "{{ TIME.WEEKS }}" }
+            , { t = 24 * 3600, u = "{{ TIME.DAYS }}" }
+            , { t = 3600, u = "{{ TIME.HOURS }}" }
+            , { t = 60, u = "{{ TIME.MINUTES }}" }
+            , { t = 1, u = "{{ TIME.SECONDS }}" }
             ]
     in
     case
@@ -103,4 +103,4 @@ get_duration prod =
                    )
 
         Nothing ->
-            "Unbekannt"
+            "{{ TIME.UNKNOWN }}"

@@ -32,8 +32,17 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotPaginationMsg sub_msg ->
-            Pagination.update sub_msg model.pagination
-                |> update_with (\m -> \sm -> { m | pagination = sm }) GotPaginationMsg model
+            let
+                updated =
+                    Pagination.update sub_msg model.pagination
+                        |> update_with (\m -> \sm -> { m | pagination = sm }) GotPaginationMsg model
+            in
+            case Pagination.to_last_error (Tuple.first updated).pagination of
+                Just err ->
+                    ( { model | last_error = Just err }, Route.replace_url (to_nav_key model) Route.Error )
+
+                Nothing ->
+                    updated
 
 
 subscriptions : Model -> Sub Msg
@@ -51,8 +60,8 @@ view model =
         product_table =
             view_product_table (Pagination.to_items model.pagination)
     in
-    { title = "Archiv"
-    , caption = "Archiv"
+    { title = "{{ PAGE.ARCHIVE.TITLE }}"
+    , caption = " {{ PAGE.ARCHIVE.CAPTION }}"
     , content = div [] [ wrap_row_col product_table, wrap_row_col pagination ]
     }
 

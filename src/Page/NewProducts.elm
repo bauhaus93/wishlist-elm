@@ -59,8 +59,8 @@ view model =
                 Nothing ->
                     div [] []
     in
-    { title = "Neuheiten"
-    , caption = "Neuheiten"
+    { title = "{{ PAGE.NEW_PRODUCTS.TITLE }}"
+    , caption = "{{ PAGE.NEW_PRODUCTS.CAPTION }}"
     , content = product_table
     }
 

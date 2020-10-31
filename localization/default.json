@@ -1,0 +1,53 @@
+{
+  "PAGE": {
+    "HOME": {
+      "TITLE": "Aktuelles",
+      "CAPTION": "Forderungen vom"
+    },
+    "NEW_PRODUCTS": {
+      "TITLE": "Neuheiten",
+      "CAPTION": "Neuheiten"
+    },
+    "ARCHIVE": {
+      "TITLE": "Archiv",
+      "CAPTION": "Archiv"
+    },
+    "ERROR": {
+      "TITLE": "Fehler",
+      "CAPTION": "Fehler"
+    }
+  },
+  "NAVBAR": {
+    "BRAND": "Winglers Liste",
+    "HOME": "Aktuell",
+    "NEW_PRODUCTS": "Neues",
+    "ARCHIVE": "Archiv"
+  },
+
+  "LABEL": {
+    "COUNT": "Anzahl",
+    "VALUE": "Wert",
+    "WISHLIST_NAME": "Zweck",
+    "DATE_RANGE": "Vorhanden",
+    "DURATION": "Dauer"
+  },
+
+  "ERROR_MESSAGE": {
+    "BAD_URL": "Ungültige URL",
+    "TIMEOUT": "Zeitüberschreitung bei Anfrage",
+    "NETWORK_ERROR": "Konnte keine Verbindung herstellen",
+    "BAD_STATUS": "HTTP",
+    "BAD_BODY": "Unerwarteter Inhalt",
+    "PAGE_NOT_FOUND": "Seite konnte etzadla nicht gefunden werden"
+  },
+
+  "TIME": {
+    "WEEKS": "Wochen",
+    "DAYS": "Tage",
+    "HOURS": "Stunden",
+    "MINUTES": "Minuten",
+    "SECONDS": "Sekunden",
+    "UNKNOWN": "Unbekannt"
+  },
+  "PRODUCT_IMG_ALT": "Produktbild"
+}

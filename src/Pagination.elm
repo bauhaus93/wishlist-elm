@@ -1,4 +1,4 @@
-module Pagination exposing (Model, Msg(..), init, to_items, update, view)
+module Pagination exposing (Model, Msg(..), init, to_items, to_last_error, update, view)
 
 import ApiRoute exposing (ApiRoute)
 import Dict
@@ -133,6 +133,11 @@ view_page_entry entry_page curr_page =
 to_items : Model a -> List a
 to_items pagination =
     pagination.items
+
+
+to_last_error : Model a -> Maybe Error.Error
+to_last_error model =
+    model.last_error
 
 
 next_page : Model a -> ( Model a, Cmd (Msg a) )

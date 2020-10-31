@@ -31,8 +31,8 @@ subscriptions model =
 
 view : Model -> ViewInfo Msg
 view model =
-    { title = "Fehler"
-    , caption = "Fehler"
+    { title = "{{ PAGE.ERROR.TITLE }}"
+    , caption = "{{ PAGE.ERROR.CAPTION }}"
     , content = view_error model.error
     }
 

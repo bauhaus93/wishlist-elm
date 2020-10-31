@@ -1,6 +1,6 @@
 node_modules
 elm-stuff
+build
+public/*.js
 package-lock.json
 .env*
-elm.js
-elm.min.js

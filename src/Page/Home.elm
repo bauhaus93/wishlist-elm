@@ -71,10 +71,10 @@ view model =
                     timestamp_to_dmy time
 
                 Nothing ->
-                    "Unbekannt"
+                    "{[ TIME.UNKNOWN }}"
     in
-    { title = "Aktuell"
-    , caption = "Forderungen vom " ++ time_string
+    { title = "{{ PAGE.HOME.TITLE }}"
+    , caption = "{{ PAGE.HOME.CAPTION }} " ++ time_string
     , content = div [] product_table
     }
 
@@ -120,7 +120,7 @@ view_wishlist_info wishlist =
     in
     table [ class "table table-responsive table-sm" ]
         [ tbody []
-            [ view_row "Anzahl" (String.fromInt <| List.length wishlist.products)
-            , view_row "Wert" (String.fromFloat <| toFloat wishlist.value / 100.0)
+            [ view_row "{{ LABEL.COUNT }}" (String.fromInt <| List.length wishlist.products)
+            , view_row "{{ LABEL.VALUE }}" (String.fromFloat <| toFloat wishlist.value / 100.0)
             ]
         ]
