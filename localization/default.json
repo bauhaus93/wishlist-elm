@@ -34,7 +34,11 @@
     "VALUE": "Wert",
     "WISHLIST_NAME": "Zweck",
     "DATE_RANGE": "Vorhanden",
-    "DURATION": "Dauer"
+    "DURATION": "Dauer",
+    "TIME": "Zeit",
+    "LAST_DAY": "24h",
+    "LAST_WEEK": "7 Tage",
+    "LAST_MONTH": "30 Tage"
   },
 
   "ERROR_MESSAGE": {

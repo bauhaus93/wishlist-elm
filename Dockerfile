@@ -7,7 +7,7 @@ RUN npm install --production
 
 COPY . .
 
-RUN scripts/build.sh
+RUN npm run build
 
 CMD ["npm", "start"]
 
