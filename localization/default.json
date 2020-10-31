@@ -12,6 +12,10 @@
       "TITLE": "Archiv",
       "CAPTION": "Archiv"
     },
+    "TIMLINE": {
+      "TITLE": "Timeline",
+      "CAPTION": "Timeline"
+    },
     "ERROR": {
       "TITLE": "Fehler",
       "CAPTION": "Fehler"
@@ -21,7 +25,8 @@
     "BRAND": "Winglers Liste",
     "HOME": "Aktuell",
     "NEW_PRODUCTS": "Neues",
-    "ARCHIVE": "Archiv"
+    "ARCHIVE": "Archiv",
+    "TIMELINE": "Timeline"
   },
 
   "LABEL": {

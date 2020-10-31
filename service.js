@@ -46,3 +46,19 @@ module.exports.get_archived_products = async (
     () => models.get_archived_products(page, items_per_page)
   );
 };
+
+module.exports.get_timeline_datapoints = async (resolution_str, count_str) => {
+  var resolution = parseInt(resolution_str);
+  if (isNaN(resolution) || resolution < 3600) {
+    resolution = 3600;
+  }
+  var count = parseInt(count_str);
+  if (isNaN(count) || count <= 0 || count > 100) {
+    count = 20;
+  }
+  const datapoints = await cached_request(
+    "timeline_" + resolution.toString() + "_" + count.toString(),
+    () => models.get_timeline_datapoints(resolution, count)
+  );
+  return datapoints;
+};

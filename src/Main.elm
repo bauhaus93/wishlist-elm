@@ -11,6 +11,7 @@ import Page.Empty as Empty
 import Page.Error as Error
 import Page.Home as Home
 import Page.NewProducts as NewProducts
+import Page.Timeline as Timeline
 import Route
 import Url
 
@@ -19,6 +20,7 @@ type Model
     = Home Home.Model
     | NewProducts NewProducts.Model
     | Archive Archive.Model
+    | Timeline Timeline.Model
     | Error Error.Model
     | Redirect Nav.Key
 
@@ -29,6 +31,7 @@ type Msg
     | GotHomeMsg Home.Msg
     | GotNewProductsMsg NewProducts.Msg
     | GotArchiveMsg Archive.Msg
+    | GotTimelineMsg Timeline.Msg
     | GotErrorMsg Error.Msg
 
 
@@ -57,6 +60,10 @@ update msg model =
         ( GotArchiveMsg sub_msg, Archive archive ) ->
             Archive.update sub_msg archive
                 |> update_with Archive GotArchiveMsg model
+
+        ( GotTimelineMsg sub_msg, Timeline timeline ) ->
+            Timeline.update sub_msg timeline
+                |> update_with Timeline GotTimelineMsg model
 
         ( GotErrorMsg sub_msg, Error error ) ->
             Error.update sub_msg error
@@ -94,6 +101,9 @@ view model =
         Archive archive ->
             view_page Page.Archive GotArchiveMsg (Archive.view archive)
 
+        Timeline timeline ->
+            view_page Page.Timeline GotTimelineMsg (Timeline.view timeline)
+
         Error error ->
             view_page Page.Error GotErrorMsg (Error.view error)
 
@@ -113,6 +123,9 @@ to_nav_key model =
         Archive archive ->
             Archive.to_nav_key archive
 
+        Timeline timeline ->
+            Timeline.to_nav_key timeline
+
         Error error ->
             Error.to_nav_key error
 
@@ -131,6 +144,9 @@ to_last_error model =
 
         Archive archive ->
             Archive.to_last_error archive
+
+        Timeline timeline ->
+            Timeline.to_last_error timeline
 
         Error error ->
             Error.to_last_error error
@@ -157,6 +173,10 @@ change_route maybe_route model =
         Just Route.Archive ->
             Archive.init (to_nav_key model)
                 |> update_with Archive GotArchiveMsg model
+
+        Just Route.Timeline ->
+            Timeline.init (to_nav_key model)
+                |> update_with Timeline GotTimelineMsg model
 
         Just Route.Error ->
             case to_last_error model of

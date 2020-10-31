@@ -4,9 +4,11 @@ const {
   get_newest_products,
   get_archive_size,
   get_archived_products,
+  get_timeline_datapoints,
 } = require("./service");
 
 function success_handler(json_result, response) {
+  response.set("Content-Type", "application/json");
   response.send(JSON.stringify(json_result));
   response.end();
 }
@@ -26,6 +28,12 @@ module.exports = (app) => {
     var total_items = await get_archive_size();
     res.set("X-Paging-TotalRecordCount", total_items.toString());
     success_handler(await get_archived_products(page, items_per_page), res);
+  });
+
+  app.get("/api/timeline/points", async (req, res) => {
+    var resolution = req.query.resolution;
+    var count = req.query.count;
+    success_handler(await get_timeline_datapoints(resolution, count), res);
   });
 
   app.get("*", (req, res) => {

@@ -9,6 +9,7 @@ type Route
     = Home
     | NewProducts
     | Archive
+    | Timeline
     | Error
 
 
@@ -19,6 +20,7 @@ parser =
         , map NewProducts (s "new")
         , map Archive (s "archive")
         , map Error (s "error")
+        , map Timeline (s "timeline")
         ]
 
 
@@ -41,6 +43,9 @@ to_string route =
 
                 Archive ->
                     [ "archive" ]
+
+                Timeline ->
+                    [ "timeline" ]
 
                 Error ->
                     [ "error" ]

@@ -10,6 +10,7 @@ type Page
     = Home
     | NewProducts
     | Archive
+    | Timeline
     | Error
     | Other
 
@@ -39,6 +40,7 @@ navbar_elements =
     [ { route = Route.Home, label = "{{ NAVBAR.HOME }}" }
     , { route = Route.NewProducts, label = "{{ NAVBAR.NEW_PRODUCTS }}" }
     , { route = Route.Archive, label = "{{ NAVBAR.ARCHIVE }}" }
+    , { route = Route.Timeline, label = "{{ NAVBAR.TIMELINE }}" }
     ]
 
 

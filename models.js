@@ -106,3 +106,53 @@ module.exports.get_archived_products = async (page, items_per_page) => {
     .limit(items_per_page)
     .populate({ path: "source", select: "-_id" });
 };
+
+module.exports.get_timeline_datapoints = async (resolution, count) => {
+  const max_time = resolution * Math.ceil(Date.now() / 1000 / resolution);
+  const min_time = max_time - resolution * count;
+  const datapoints = (
+    await Wishlist.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: min_time, $lte: max_time },
+        },
+      },
+      {
+        $group: {
+          _id: { $floor: { $divide: ["$timestamp", resolution] } },
+          avg_value: { $avg: "$value" },
+        },
+      },
+    ])
+  )
+    .map((p) => {
+      return { slice: p._id * resolution, value: Math.round(p.avg_value) };
+    })
+    .sort((a, b) => {
+      return a.slice - b.slice;
+    });
+
+  var data_map = new Map();
+  for (
+    var slice = min_time + resolution;
+    slice <= max_time;
+    slice += resolution
+  ) {
+    var point = datapoints.find((e) => {
+      return slice <= e.slice;
+    });
+    var value = 0;
+    if (point == undefined) {
+      var prev_value = data_map.get(slice - resolution);
+      if (prev_value != undefined) {
+        value = prev_value;
+      }
+    } else {
+      value = point.value;
+    }
+    data_map.set(slice, value);
+  }
+  return Array.from(data_map.entries()).map((kv) => {
+    return { slice: kv[0], value: kv[1] };
+  });
+};
