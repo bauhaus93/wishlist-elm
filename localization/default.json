@@ -36,9 +36,9 @@
     "DATE_RANGE": "Vorhanden",
     "DURATION": "Dauer",
     "TIME": "Zeit",
-    "LAST_DAY": "24h",
+    "LAST_DAY": "24 Stunden",
     "LAST_WEEK": "7 Tage",
-    "LAST_MONTH": "30 Tage"
+    "LAST_MONTH": "4 Wochen"
   },
 
   "ERROR_MESSAGE": {

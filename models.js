@@ -139,7 +139,7 @@ module.exports.get_timeline_datapoints = async (resolution, count) => {
     slice += resolution
   ) {
     var point = datapoints.find((e) => {
-      return slice <= e.slice;
+      return slice == e.slice;
     });
     var value = 0;
     if (point == undefined) {

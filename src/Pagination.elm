@@ -1,6 +1,7 @@
 module Pagination exposing (Model, Msg(..), init, to_items, to_last_error, update, view)
 
 import ApiRoute exposing (ApiRoute)
+import Debug
 import Dict
 import Error
 import Html exposing (..)
@@ -23,7 +24,7 @@ type alias Model a =
     , curr_page : Int
     , per_page : Int
     , max_page : Maybe Int
-    , request_route : Int -> ApiRoute
+    , request_route : Int -> Int -> ApiRoute
     , decoder : D.Decoder a
     }
 
@@ -51,11 +52,11 @@ update msg model =
                         maybe_max_page =
                             case ( total_items, model.max_page ) of
                                 ( Just new_max, Just old_max ) ->
-                                    Just new_max
+                                    Just (new_max // model.per_page)
 
                                 ( Just new_max, Nothing ) ->
                                     total_items
-                                        |> Maybe.andThen (\i -> Just (ceiling (toFloat i / toFloat model.per_page)))
+                                        |> Maybe.andThen (\i -> Just (i // model.per_page))
 
                                 ( Nothing, Just old_max ) ->
                                     Just old_max
@@ -105,12 +106,12 @@ view model =
         ]
 
 
-init : Int -> (Int -> ApiRoute) -> D.Decoder a -> Model a
-init per_page request_route decoder =
+init : (Int -> Int -> ApiRoute) -> D.Decoder a -> Model a
+init request_route decoder =
     { items = []
     , last_error = Nothing
     , curr_page = 0
-    , per_page = per_page
+    , per_page = 10
     , max_page = Nothing
     , request_route = request_route
     , decoder = decoder
@@ -176,7 +177,7 @@ prev_page pagination =
 request_page : Model a -> Int -> ( Model a, Cmd (Msg a) )
 request_page model page_num =
     ( { model | curr_page = page_num }
-    , request_http (model.request_route page_num) model.decoder
+    , request_http (model.request_route page_num model.per_page) model.decoder
     )
 
 
@@ -216,5 +217,5 @@ expect_json to_msg decoder =
 
 to_total_max_items : Http.Metadata -> Maybe Int
 to_total_max_items meta =
-    Dict.get "X-Paging-TotalRecordCount" meta.headers
+    Dict.get (String.toLower "X-Paging-TotalRecordCount") meta.headers
         |> Maybe.andThen String.toInt

@@ -6,10 +6,13 @@
   "scripts": {
     "start": "node app.js",
     "build": "npm-run-all build:setup build:elm build:min build:lang-default",
+    "build-debug": "npm-run-all build:setup build:elm-debug build:lang-default",
     "build:setup": "mkdir -p build",
     "build:elm": "elm make src/Main.elm --optimize --output='build/elm.mustache.js'",
+    "build:elm-debug": "elm make src/Main.elm --output='build/elm.min.mustache.js'",
     "build:min": "uglifyjs 'build/elm.mustache.js' --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output 'build/elm.min.mustache.js'",
-    "build:lang-default": "mustache localization/default.json build/elm.min.mustache.js > public/elm.min.js"
+    "build:lang-default": "mustache localization/default.json build/elm.min.mustache.js > public/elm.min.js",
+    "deploy": "heroku container:push web && heroku container:release web"
   },
   "author": "Jakob Fischer",
   "license": "BSD-2-Clause",

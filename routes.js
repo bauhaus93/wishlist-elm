@@ -24,13 +24,13 @@ module.exports = (app) => {
 
   app.get("/api/product/archive", async (req, res) => {
     var page = req.query.page;
-    var items_per_page = req.query.items;
+    var items_per_page = req.query.per_page;
     var total_items = await get_archive_size();
     res.set("X-Paging-TotalRecordCount", total_items.toString());
     success_handler(await get_archived_products(page, items_per_page), res);
   });
 
-  app.get("/api/timeline/points", async (req, res) => {
+  app.get("/api/wishlist/values", async (req, res) => {
     var resolution = req.query.resolution;
     var count = req.query.count;
     success_handler(await get_timeline_datapoints(resolution, count), res);

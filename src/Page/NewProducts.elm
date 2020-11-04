@@ -54,7 +54,9 @@ view model =
         product_table =
             case model.new_products of
                 Just products ->
-                    view_product_table products
+                    view_product_table True <|
+                        List.reverse <|
+                            List.sortBy (\p -> p.first_seen) products
 
                 Nothing ->
                     div [] []

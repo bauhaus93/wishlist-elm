@@ -13,6 +13,11 @@ import LineChart
 import LineChart.Area as Area
 import LineChart.Axis as Axis
 import LineChart.Axis.Intersection as Intersection
+import LineChart.Axis.Line as AxisLine
+import LineChart.Axis.Range as Range
+import LineChart.Axis.Tick as Tick
+import LineChart.Axis.Ticks as Ticks
+import LineChart.Axis.Title as Title
 import LineChart.Colors as Colors
 import LineChart.Container as Container
 import LineChart.Dots as Dots
@@ -25,7 +30,7 @@ import LineChart.Line as Line
 import Page exposing (ViewInfo)
 import Route
 import Time
-import Utility exposing (timestamp_to_dmy, wrap_row_col)
+import Utility exposing (timestamp_to_dm, timestamp_to_hm, wrap_row_col, wrap_row_col_centered)
 
 
 type alias Model =
@@ -71,20 +76,42 @@ subscriptions model =
 view : Model -> ViewInfo Msg
 view model =
     let
+        timespan_button : Msg -> Bool -> String -> Html Msg
+        timespan_button msg is_active label_string =
+            label [ class "btn btn-secondary" ]
+                [ input [ type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
+                , text label_string
+                ]
+
         request_buttons =
             div [ class "btn-group btn-group-toggle", attribute "data-toggle" "buttons" ]
-                [ button [ class "btn btn-secondary", type_ "radio", onClick RequestLastDay ] [ text "{{ LABEL.LAST_DAY }}" ]
-                , button [ class "btn btn-secondary", type_ "radio", onClick RequestLastWeek ] [ text "{{ LABEL.LAST_WEEK }}" ]
-                , button [ class "btn btn-secondary", type_ "radio", onClick RequestLastMonth ] [ text "{{ LABEL.LAST_MONTH }}" ]
+                [ timespan_button RequestLastDay True "{{ LABEL.LAST_DAY }}"
+                , timespan_button RequestLastWeek False "{{ LABEL.LAST_WEEK }}"
+                , timespan_button RequestLastMonth False "{{ LABEL.LAST_MONTH }}"
                 ]
 
         chart =
             case model.datapoints of
                 Just datapoints ->
                     let
+                        high =
+                            List.tail datapoints
+                                |> Maybe.andThen List.head
+
+                        low =
+                            List.head datapoints
+
+                        resolution =
+                            case ( high, low ) of
+                                ( Just hi, Just lo ) ->
+                                    hi.slice - lo.slice
+
+                                ( _, _ ) ->
+                                    3600
+
                         chart_config =
-                            { x = Axis.time Time.utc 800 "{{ LABEL.TIME }}" (\d -> 1000 * d.slice)
-                            , y = Axis.default 600 "{{ LABEL.VALUE }}" .value
+                            { x = x_axis_config resolution
+                            , y = Axis.default 400 "{{ LABEL.VALUE }}" .value
                             , container = Container.responsive "chart-1"
                             , interpolation = Interpolation.monotone
                             , intersection = Intersection.default
@@ -93,12 +120,12 @@ view model =
                             , junk = Junk.default
                             , grid = Grid.default
                             , area = Area.default
-                            , line = Line.wider 2.0
+                            , line = Line.wider 3.0
                             , dots = Dots.default
                             }
 
                         prepared_datapoints =
-                            List.map (\d -> { slice = toFloat d.slice, value = toFloat d.value / 100.0 }) datapoints
+                            List.map (\d -> { slice = d.slice, value = toFloat d.value / 100.0 }) datapoints
                     in
                     LineChart.viewCustom chart_config [ LineChart.line Colors.blueLight Dots.none "{{ LABEL.VALUE }}" prepared_datapoints ]
 
@@ -107,8 +134,43 @@ view model =
     in
     { title = "{{ PAGE.TIMELINE.TITLE }}"
     , caption = "{{ PAGE.TIMELINE.CAPTION }}"
-    , content = div [ class "responsive" ] [ chart, wrap_row_col request_buttons ]
+    , content = div [] [ wrap_row_col chart, wrap_row_col_centered request_buttons ]
     }
+
+
+x_axis_config : Int -> Axis.Config { slice : Int, value : Float } msg
+x_axis_config resolution =
+    Axis.custom
+        { title = Title.default "{{ LABEL.TIME }}"
+        , variable = \d -> Just (toFloat d.slice)
+        , pixels = 600
+        , range = Range.default
+        , axisLine = AxisLine.full Colors.black
+        , ticks = Ticks.intCustom 6 (custom_tick resolution)
+        }
+
+
+custom_tick : Int -> Int -> Tick.Config msg
+custom_tick resolution n =
+    let
+        formatter : Int -> String
+        formatter =
+            case resolution < 24 * 3600 of
+                True ->
+                    \v -> timestamp_to_hm (v - modBy 3600 v)
+
+                False ->
+                    timestamp_to_dm
+    in
+    Tick.custom
+        { position = toFloat n
+        , color = Colors.black
+        , width = 2
+        , length = 2
+        , grid = True
+        , direction = Tick.negative
+        , label = Just (Junk.label Colors.black (formatter n))
+        }
 
 
 to_nav_key : Model -> Nav.Key
@@ -136,12 +198,12 @@ request_last_day =
 
 request_last_week : Cmd Msg
 request_last_week =
-    request_datapoints { resolution = Just (7 * 3600), count = Just 7 }
+    request_datapoints { resolution = Just (24 * 3600), count = Just 7 }
 
 
 request_last_month : Cmd Msg
 request_last_month =
-    request_datapoints { resolution = Just (30 * 3600), count = Just 30 }
+    request_datapoints { resolution = Just (2 * 24 * 3600), count = Just 14 }
 
 
 init : Nav.Key -> ( Model, Cmd Msg )

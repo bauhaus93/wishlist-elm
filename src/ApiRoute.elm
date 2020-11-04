@@ -65,7 +65,7 @@ to_string route =
                     [ "api", "product", "archive" ]
 
                 Timeline _ ->
-                    [ "api", "timeline", "points" ]
+                    [ "api", "wishlist", "values" ]
 
         query_pieces =
             case route of

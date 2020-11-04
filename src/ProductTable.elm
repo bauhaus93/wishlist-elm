@@ -1,26 +1,36 @@
 module ProductTable exposing (view_product_table)
 
 import Api.Product exposing (Product)
+import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Time
-import Utility exposing (month_to_num, timestamp_to_dmy)
+import Utility exposing (format_currency, month_to_num, timestamp_to_dmy)
 
 
-view_product_table : List Product -> Html msg
-view_product_table products =
+view_product_table : Bool -> List Product -> Html msg
+view_product_table shorten_names products =
     let
         items =
-            List.sortBy (\p -> p.price) products
-                |> List.reverse
-                |> List.map to_list_item
+            List.map to_list_item products
                 |> List.foldr (++) []
 
         to_list_item : Product -> List (Html msg)
         to_list_item prod =
             [ tr []
                 [ td [] [ img [ src prod.url_img, class "img-responsive", alt "{{ PRODUCT_IMG_ALT }}" ] [] ]
-                , th [ attribute "colspan" "2", class "align-middle" ] [ a [ href prod.url, target "_blank" ] [ text prod.name ] ]
+                , th [ attribute "colspan" "2", class "align-middle" ]
+                    [ a [ href prod.url, target "_blank" ]
+                        [ text
+                            (case shorten_names of
+                                True ->
+                                    shorten_product_name prod.name
+
+                                False ->
+                                    prod.name
+                            )
+                        ]
+                    ]
                 ]
             , view_row "{{ LABEL.VALUE }}" <| text (get_price_quantity prod)
             , view_row "{{ LABEL.WISHLIST_NAME }}" <| a [ href prod.source.url, target "_blank" ] [ text prod.source.name ]
@@ -39,6 +49,32 @@ view_product_table products =
         [ tbody [] items ]
 
 
+shorten_product_name : String -> String
+shorten_product_name name =
+    String.split "|" name
+        |> List.head
+        |> Maybe.withDefault name
+        |> String.split ")"
+        |> List.map
+            (\s ->
+                case List.head (String.split "(" s) of
+                    Just h ->
+                        h
+
+                    Nothing ->
+                        ""
+            )
+        |> List.foldr (++) ""
+        |> (\s ->
+                case String.length s > 60 of
+                    True ->
+                        String.slice 0 60 s ++ " [..]"
+
+                    False ->
+                        s
+           )
+
+
 get_price_quantity : Product -> String
 get_price_quantity prod =
     let
@@ -51,8 +87,7 @@ get_price_quantity prod =
                     " x " ++ String.fromInt n
     in
     String.join ""
-        [ "€ "
-        , String.fromFloat (toFloat prod.price / 100.0)
+        [ format_currency "€" <| toFloat prod.price / 100.0
         , quantity
         ]
 

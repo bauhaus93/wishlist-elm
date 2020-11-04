@@ -14,7 +14,7 @@ import ProductTable exposing (view_product_table)
 import Route
 import Task
 import Time
-import Utility exposing (timestamp_to_dmy)
+import Utility exposing (format_currency, timestamp_to_dmy)
 
 
 type alias Model =
@@ -60,7 +60,11 @@ view model =
         product_table =
             case model.last_wishlist of
                 Just last_wishlist ->
-                    [ view_wishlist_info last_wishlist, view_product_table last_wishlist.products ]
+                    [ view_wishlist_info last_wishlist
+                    , view_product_table True <|
+                        List.reverse <|
+                            List.sortBy (\p -> p.price) last_wishlist.products
+                    ]
 
                 Nothing ->
                     []
@@ -121,6 +125,6 @@ view_wishlist_info wishlist =
     table [ class "table table-responsive table-sm" ]
         [ tbody []
             [ view_row "{{ LABEL.COUNT }}" (String.fromInt <| List.length wishlist.products)
-            , view_row "{{ LABEL.VALUE }}" (String.fromFloat <| toFloat wishlist.value / 100.0)
+            , view_row "{{ LABEL.VALUE }}" (format_currency "€" <| toFloat wishlist.value / 100.0)
             ]
         ]

@@ -29,7 +29,7 @@ view page { title, caption, content } =
         view_navbar
             :: [ div [ class "container" ]
                     [ div [ class "row my-3" ] [ div [ class "col" ] [ h1 [] [ text caption ] ] ]
-                    , div [ class "row my-3" ] [ div [ class "col" ] [ content ] ]
+                    , content
                     ]
                ]
     }

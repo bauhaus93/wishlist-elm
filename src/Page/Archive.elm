@@ -58,7 +58,7 @@ view model =
                 |> Html.map GotPaginationMsg
 
         product_table =
-            view_product_table (Pagination.to_items model.pagination)
+            view_product_table True (Pagination.to_items model.pagination)
     in
     { title = "{{ PAGE.ARCHIVE.TITLE }}"
     , caption = " {{ PAGE.ARCHIVE.CAPTION }}"
@@ -92,7 +92,7 @@ init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     let
         initial_pagination =
-            Pagination.init 5 (\p -> ApiRoute.ProductArchive { page = Just p, per_page = Just 10 }) Api.Product.decoder
+            Pagination.init (\page -> \per_page -> ApiRoute.ProductArchive { page = Just page, per_page = Just per_page }) Api.Product.decoder
 
         initial_model =
             { nav_key = nav_key
