@@ -101,7 +101,7 @@ module.exports.get_archived_products = async (page, items_per_page) => {
     { _id: { $nin: last_wishlist_result.products } },
     "-_id"
   )
-    .sort({ first_seen: "desc" })
+    .sort({ last_seen: "desc" })
     .skip((page - 1) * items_per_page)
     .limit(items_per_page)
     .populate({ path: "source", select: "-_id" });
