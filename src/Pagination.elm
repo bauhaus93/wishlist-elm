@@ -1,7 +1,6 @@
 module Pagination exposing (Model, Msg(..), init, to_items, to_last_error, update, view)
 
 import ApiRoute exposing (ApiRoute)
-import Debug
 import Dict
 import Error
 import Html exposing (..)

@@ -1,23 +1,19 @@
 {
   "PAGE": {
+    "TITLE": "Winglers Liste",
     "HOME": {
-      "TITLE": "Aktuelles",
       "CAPTION": "Forderungen vom"
     },
     "NEW_PRODUCTS": {
-      "TITLE": "Neuheiten",
       "CAPTION": "Neuheiten"
     },
     "ARCHIVE": {
-      "TITLE": "Archiv",
       "CAPTION": "Archiv"
     },
     "TIMLINE": {
-      "TITLE": "Timeline",
       "CAPTION": "Timeline"
     },
     "ERROR": {
-      "TITLE": "Fehler",
       "CAPTION": "Fehler"
     }
   },

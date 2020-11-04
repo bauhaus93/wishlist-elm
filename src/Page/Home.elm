@@ -77,7 +77,7 @@ view model =
                 Nothing ->
                     "{[ TIME.UNKNOWN }}"
     in
-    { title = "{{ PAGE.HOME.TITLE }}"
+    { title = "{{ PAGE.TITLE }}"
     , caption = "{{ PAGE.HOME.CAPTION }} " ++ time_string
     , content = div [] product_table
     }

@@ -132,7 +132,7 @@ view model =
                 Nothing ->
                     div [] []
     in
-    { title = "{{ PAGE.TIMELINE.TITLE }}"
+    { title = "{{ PAGE.TITLE }}"
     , caption = "{{ PAGE.TIMELINE.CAPTION }}"
     , content = div [] [ wrap_row_col chart, wrap_row_col_centered request_buttons ]
     }

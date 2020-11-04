@@ -1,7 +1,6 @@
 module ProductTable exposing (view_product_table)
 
 import Api.Product exposing (Product)
-import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Time

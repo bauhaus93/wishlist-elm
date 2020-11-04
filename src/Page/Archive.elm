@@ -60,7 +60,7 @@ view model =
         product_table =
             view_product_table True (Pagination.to_items model.pagination)
     in
-    { title = "{{ PAGE.ARCHIVE.TITLE }}"
+    { title = "{{ PAGE.TITLE }}"
     , caption = " {{ PAGE.ARCHIVE.CAPTION }}"
     , content = div [] [ wrap_row_col product_table, wrap_row_col pagination ]
     }
