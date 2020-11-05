@@ -46,6 +46,8 @@ type Msg
     = RequestLastDay
     | RequestLastWeek
     | RequestLastMonth
+    | RequestLast3Month
+    | RequestLastYear
     | GotTime Time.Posix
     | GotDatapoints (Result Http.Error (List Datapoint))
 
@@ -58,7 +60,7 @@ update msg model =
                 timestamp =
                     Just (Time.posixToMillis time // 1000)
             in
-            ( { model | time = timestamp }, request_last_day timestamp )
+            ( { model | time = timestamp }, request_days 1 timestamp )
 
         GotDatapoints result ->
             case result of
@@ -69,13 +71,19 @@ update msg model =
                     ( { model | last_error = Just (Error.HttpRequest e) }, Nav.pushUrl (to_nav_key model) (Route.to_string Route.Error) )
 
         RequestLastDay ->
-            ( model, request_last_day model.time )
+            ( model, request_days 1 model.time )
 
         RequestLastWeek ->
-            ( model, request_last_week model.time )
+            ( model, request_weeks 1 model.time )
 
         RequestLastMonth ->
-            ( model, request_last_month model.time )
+            ( model, request_months 1 model.time )
+
+        RequestLast3Month ->
+            ( model, request_months 3 model.time )
+
+        RequestLastYear ->
+            ( model, request_years 1 model.time )
 
 
 subscriptions : Model -> Sub Msg
@@ -98,6 +106,8 @@ view model =
                 [ timespan_button RequestLastDay True "{{ LABEL.LAST_DAY }}"
                 , timespan_button RequestLastWeek False "{{ LABEL.LAST_WEEK }}"
                 , timespan_button RequestLastMonth False "{{ LABEL.LAST_MONTH }}"
+                , timespan_button RequestLast3Month False "{{ LABEL.LAST_3MONTH }}"
+                , timespan_button RequestLastYear False "{{ LABEL.LAST_YEAR }}"
                 ]
 
         chart =
@@ -200,34 +210,38 @@ request_datapoints query =
         }
 
 
-request_last_day : Maybe Int -> Cmd Msg
-request_last_day maybe_now =
+request_days : Int -> Maybe Int -> Cmd Msg
+request_days days_past maybe_now =
+    let
+        points =
+            case days_past >= 365 of
+                True ->
+                    50
+
+                False ->
+                    20
+    in
     request_datapoints
         { from_timestamp =
             maybe_now
-                |> Maybe.andThen (\n -> Just (n - 24 * 3600))
-        , count = Just 24
+                |> Maybe.andThen (\n -> Just (n - days_past * 24 * 3600))
+        , count = Just points
         }
 
 
-request_last_week : Maybe Int -> Cmd Msg
-request_last_week maybe_now =
-    request_datapoints
-        { from_timestamp =
-            maybe_now
-                |> Maybe.andThen (\n -> Just (n - 7 * 24 * 3600))
-        , count = Just 14
-        }
+request_weeks : Int -> Maybe Int -> Cmd Msg
+request_weeks weeks_past =
+    request_days (7 * weeks_past)
 
 
-request_last_month : Maybe Int -> Cmd Msg
-request_last_month maybe_now =
-    request_datapoints
-        { from_timestamp =
-            maybe_now
-                |> Maybe.andThen (\n -> Just (n - 30 * 24 * 3600))
-        , count = Just 30
-        }
+request_months : Int -> Maybe Int -> Cmd Msg
+request_months months_past =
+    request_weeks (4 * months_past)
+
+
+request_years : Int -> Maybe Int -> Cmd Msg
+request_years years_past =
+    request_days (365 * years_past)
 
 
 init : Nav.Key -> ( Model, Cmd Msg )

@@ -1,6 +1,6 @@
 node_modules
 elm-stuff
 build
-public/*.js
+*/public/*.js
 package-lock.json
 .env*

@@ -32,9 +32,11 @@
     "DATE_RANGE": "Vorhanden",
     "DURATION": "Dauer",
     "TIME": "Zeit",
-    "LAST_DAY": "24 Stunden",
-    "LAST_WEEK": "7 Tage",
-    "LAST_MONTH": "4 Wochen"
+    "LAST_DAY": "1 Tag",
+    "LAST_WEEK": "1 Woche",
+    "LAST_MONTH": "1 Monat",
+    "LAST_3MONTH": "3 Monate",
+    "LAST_YEAR": "1 Jahr"
   },
 
   "ERROR_MESSAGE": {
@@ -47,6 +49,7 @@
   },
 
   "TIME": {
+    "YEARS": "Jahre",
     "WEEKS": "Wochen",
     "DAYS": "Tage",
     "HOURS": "Stunden",
