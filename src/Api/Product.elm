@@ -13,7 +13,6 @@ type alias Product =
     , stars : Int
     , url : String
     , url_img : String
-    , item_id : String
     , first_seen : Int
     , last_seen : Int
     , source : Source.Source
@@ -29,7 +28,6 @@ decoder =
         |> required "stars" D.int
         |> required "url" D.string
         |> required "url_img" D.string
-        |> required "item_id" D.string
         |> required "first_seen" D.int
         |> required "last_seen" D.int
         |> required "source" Source.decoder

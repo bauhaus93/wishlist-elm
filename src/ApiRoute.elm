@@ -19,14 +19,14 @@ type alias ArchiveQuery =
 
 
 type alias TimelineQuery =
-    { resolution : Maybe Int
+    { from_timestamp : Maybe Int
     , count : Maybe Int
     }
 
 
 timeline_query : Query.Parser TimelineQuery
 timeline_query =
-    Query.map2 TimelineQuery (Query.int "resolution") (Query.int "count")
+    Query.map2 TimelineQuery (Query.int "from_timestamp") (Query.int "count")
 
 
 archive_query : Query.Parser ArchiveQuery
@@ -75,8 +75,8 @@ to_string route =
                     ]
 
                 Timeline q ->
-                    [ ( "resolution", String.fromInt <| Maybe.withDefault 3600 q.resolution )
-                    , ( "count", String.fromInt <| Maybe.withDefault 24 q.count )
+                    [ ( "from_timestamp", String.fromInt <| Maybe.withDefault 0 q.from_timestamp )
+                    , ( "count", String.fromInt <| Maybe.withDefault 10 q.count )
                     ]
 
                 _ ->

@@ -66,7 +66,7 @@ module.exports.get_last_wishlist = async () => {
       .limit(1)
       .populate({
         path: "products",
-        select: "-_id",
+        select: "-_id -item_id",
         populate: { path: "source", select: "-_id" },
       })
   )[0];
@@ -107,52 +107,85 @@ module.exports.get_archived_products = async (page, items_per_page) => {
     .populate({ path: "source", select: "-_id" });
 };
 
-module.exports.get_timeline_datapoints = async (resolution, count) => {
-  const max_time = resolution * Math.ceil(Date.now() / 1000 / resolution);
-  const min_time = max_time - resolution * count;
-  const datapoints = (
-    await Wishlist.aggregate([
-      {
-        $match: {
-          timestamp: { $gte: min_time, $lte: max_time },
-        },
-      },
-      {
-        $group: {
-          _id: { $floor: { $divide: ["$timestamp", resolution] } },
-          avg_value: { $avg: "$value" },
-        },
-      },
-    ])
-  )
-    .map((p) => {
-      return { slice: p._id * resolution, value: Math.round(p.avg_value) };
-    })
-    .sort((a, b) => {
-      return a.slice - b.slice;
-    });
-
-  var data_map = new Map();
-  for (
-    var slice = min_time + resolution;
-    slice <= max_time;
-    slice += resolution
-  ) {
-    var point = datapoints.find((e) => {
-      return slice == e.slice;
-    });
-    var value = 0;
-    if (point == undefined) {
-      var prev_value = data_map.get(slice - resolution);
-      if (prev_value != undefined) {
-        value = prev_value;
-      }
-    } else {
-      value = point.value;
-    }
-    data_map.set(slice, value);
-  }
-  return Array.from(data_map.entries()).map((kv) => {
-    return { slice: kv[0], value: kv[1] };
+module.exports.get_timeline_datapoints = async (from_timestamp, count) => {
+  const now_timestamp = Math.floor(Date.now() / 1000 / 3600) * 3600;
+  const bucket_size = Math.ceil((now_timestamp - from_timestamp) / count);
+  const boundaries = [...Array(count).keys()].map((i) => {
+    return from_timestamp + bucket_size * i;
   });
+  const datapoints = await Wishlist.aggregate([
+    {
+      $match: {
+        timestamp: { $gte: from_timestamp, $lte: now_timestamp },
+      },
+    },
+    {
+      $lookup: {
+        from: "product",
+        localField: "products",
+        foreignField: "_id",
+        as: "full_products",
+      },
+    },
+    {
+      $set: {
+        value: {
+          $reduce: {
+            input: "$full_products",
+            initialValue: 0,
+            in: {
+              $add: [
+                "$$value",
+                { $multiply: ["$$this.price", "$$this.quantity"] },
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
+      $bucket: {
+        groupBy: "$timestamp",
+        boundaries: boundaries,
+        default: boundaries[boundaries.length - 1],
+        output: {
+          value: { $avg: "$value" },
+        },
+      },
+    },
+    {
+      $project: {
+        slice: "$_id",
+        value: { $floor: "$value" },
+        _id: 0,
+      },
+    },
+  ]);
+  if (datapoints.length > 0) {
+    datapoints.push({
+      slice: now_timestamp,
+      value: datapoints[datapoints.length - 1].value,
+    });
+  } else {
+    const last = await Wishlist.find(
+      { timestamp: { $lte: from_timestamp } },
+      "-_id products"
+    )
+      .sort({ timestamp: "desc" })
+      .limit(1)
+      .populate({ path: "products", select: "price quantity -_id" });
+    if (last && last.length > 0) {
+      const sum = last[0].products.reduce(
+        (acc, p) => acc + p.price * p.quantity,
+        0
+      );
+      return [
+        { slice: from_timestamp, value: sum },
+        { slice: now_timestamp, value: sum },
+      ];
+    } else {
+      return [];
+    }
+  }
+  return datapoints;
 };

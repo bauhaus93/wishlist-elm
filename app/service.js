@@ -47,18 +47,22 @@ module.exports.get_archived_products = async (
   );
 };
 
-module.exports.get_timeline_datapoints = async (resolution_str, count_str) => {
-  var resolution = parseInt(resolution_str);
-  if (isNaN(resolution) || resolution < 3600) {
-    resolution = 3600;
+module.exports.get_timeline_datapoints = async (
+  from_timestamp_str,
+  count_str
+) => {
+  var from_timestamp = parseInt(from_timestamp_str);
+  if (isNaN(from_timestamp) || from_timestamp < 0) {
+    from_timestamp = Math.floor(Date.now() / 1000) - 24 * 3600;
   }
+  from_timestamp = Math.floor(from_timestamp / 3600) * 3600; // Clamp to 1h intervals
   var count = parseInt(count_str);
   if (isNaN(count) || count <= 0 || count > 100) {
-    count = 20;
+    count = 10;
   }
   const datapoints = await cached_request(
-    "timeline_" + resolution.toString() + "_" + count.toString(),
-    () => models.get_timeline_datapoints(resolution, count)
+    "timeline_" + from_timestamp.toString() + "_" + count.toString(),
+    () => models.get_timeline_datapoints(from_timestamp, count)
   );
   return datapoints;
 };

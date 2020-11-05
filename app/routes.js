@@ -31,7 +31,7 @@ module.exports = (app) => {
   });
 
   app.get("/api/wishlist/values", async (req, res) => {
-    var resolution = req.query.resolution;
+    var resolution = req.query.from_timestamp;
     var count = req.query.count;
     success_handler(await get_timeline_datapoints(resolution, count), res);
   });

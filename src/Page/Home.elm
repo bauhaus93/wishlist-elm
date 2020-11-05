@@ -121,10 +121,15 @@ view_wishlist_info wishlist =
                 [ th [] [ text caption ]
                 , td [] [ text value ]
                 ]
+
+        wishlist_value =
+            List.foldr (\p -> \acc -> acc + (p.price * p.quantity)) 0 wishlist.products
+                |> toFloat
+                |> (*) 1.0e-2
     in
     table [ class "table table-responsive table-sm" ]
         [ tbody []
             [ view_row "{{ LABEL.COUNT }}" (String.fromInt <| List.length wishlist.products)
-            , view_row "{{ LABEL.VALUE }}" (format_currency "€" <| toFloat wishlist.value / 100.0)
+            , view_row "{{ LABEL.VALUE }}" (format_currency "€" <| wishlist_value)
             ]
         ]

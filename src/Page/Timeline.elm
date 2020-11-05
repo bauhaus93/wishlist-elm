@@ -29,12 +29,14 @@ import LineChart.Legends as Legends
 import LineChart.Line as Line
 import Page exposing (ViewInfo)
 import Route
+import Task
 import Time
 import Utility exposing (timestamp_to_dm, timestamp_to_hm, wrap_row_col, wrap_row_col_centered)
 
 
 type alias Model =
     { nav_key : Nav.Key
+    , time : Maybe Int
     , datapoints : Maybe (List Datapoint)
     , last_error : Maybe Error.Error
     }
@@ -44,12 +46,20 @@ type Msg
     = RequestLastDay
     | RequestLastWeek
     | RequestLastMonth
+    | GotTime Time.Posix
     | GotDatapoints (Result Http.Error (List Datapoint))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        GotTime time ->
+            let
+                timestamp =
+                    Just (Time.posixToMillis time // 1000)
+            in
+            ( { model | time = timestamp }, request_last_day timestamp )
+
         GotDatapoints result ->
             case result of
                 Ok data ->
@@ -59,13 +69,13 @@ update msg model =
                     ( { model | last_error = Just (Error.HttpRequest e) }, Nav.pushUrl (to_nav_key model) (Route.to_string Route.Error) )
 
         RequestLastDay ->
-            ( model, request_last_day )
+            ( model, request_last_day model.time )
 
         RequestLastWeek ->
-            ( model, request_last_week )
+            ( model, request_last_week model.time )
 
         RequestLastMonth ->
-            ( model, request_last_month )
+            ( model, request_last_month model.time )
 
 
 subscriptions : Model -> Sub Msg
@@ -94,23 +104,22 @@ view model =
             case model.datapoints of
                 Just datapoints ->
                     let
+                        slices =
+                            List.map (\d -> d.slice) datapoints
+
                         high =
-                            List.tail datapoints
-                                |> Maybe.andThen List.head
+                            List.maximum slices
+                                |> Maybe.withDefault 0
 
                         low =
-                            List.head datapoints
+                            List.minimum slices
+                                |> Maybe.withDefault 0
 
-                        resolution =
-                            case ( high, low ) of
-                                ( Just hi, Just lo ) ->
-                                    hi.slice - lo.slice
-
-                                ( _, _ ) ->
-                                    3600
+                        timespan =
+                            high - low
 
                         chart_config =
-                            { x = x_axis_config resolution
+                            { x = x_axis_config timespan
                             , y = Axis.default 400 "{{ LABEL.VALUE }}" .value
                             , container = Container.responsive "chart-1"
                             , interpolation = Interpolation.monotone
@@ -120,14 +129,14 @@ view model =
                             , junk = Junk.default
                             , grid = Grid.default
                             , area = Area.default
-                            , line = Line.wider 3.0
+                            , line = Line.wider 2.0
                             , dots = Dots.default
                             }
 
                         prepared_datapoints =
                             List.map (\d -> { slice = d.slice, value = toFloat d.value / 100.0 }) datapoints
                     in
-                    LineChart.viewCustom chart_config [ LineChart.line Colors.blueLight Dots.none "{{ LABEL.VALUE }}" prepared_datapoints ]
+                    LineChart.viewCustom chart_config [ LineChart.line Colors.blue Dots.none "{{ LABEL.VALUE }}" prepared_datapoints ]
 
                 Nothing ->
                     div [] []
@@ -139,23 +148,23 @@ view model =
 
 
 x_axis_config : Int -> Axis.Config { slice : Int, value : Float } msg
-x_axis_config resolution =
+x_axis_config timespan =
     Axis.custom
         { title = Title.default "{{ LABEL.TIME }}"
         , variable = \d -> Just (toFloat d.slice)
         , pixels = 600
         , range = Range.default
         , axisLine = AxisLine.full Colors.black
-        , ticks = Ticks.intCustom 6 (custom_tick resolution)
+        , ticks = Ticks.intCustom 6 (custom_tick timespan)
         }
 
 
 custom_tick : Int -> Int -> Tick.Config msg
-custom_tick resolution n =
+custom_tick timespan n =
     let
         formatter : Int -> String
         formatter =
-            case resolution < 24 * 3600 of
+            case timespan <= 48 * 3600 of
                 True ->
                     \v -> timestamp_to_hm (v - modBy 3600 v)
 
@@ -191,26 +200,42 @@ request_datapoints query =
         }
 
 
-request_last_day : Cmd Msg
-request_last_day =
-    request_datapoints { resolution = Just 3600, count = Just 24 }
+request_last_day : Maybe Int -> Cmd Msg
+request_last_day maybe_now =
+    request_datapoints
+        { from_timestamp =
+            maybe_now
+                |> Maybe.andThen (\n -> Just (n - 24 * 3600))
+        , count = Just 24
+        }
 
 
-request_last_week : Cmd Msg
-request_last_week =
-    request_datapoints { resolution = Just (24 * 3600), count = Just 7 }
+request_last_week : Maybe Int -> Cmd Msg
+request_last_week maybe_now =
+    request_datapoints
+        { from_timestamp =
+            maybe_now
+                |> Maybe.andThen (\n -> Just (n - 7 * 24 * 3600))
+        , count = Just 14
+        }
 
 
-request_last_month : Cmd Msg
-request_last_month =
-    request_datapoints { resolution = Just (2 * 24 * 3600), count = Just 14 }
+request_last_month : Maybe Int -> Cmd Msg
+request_last_month maybe_now =
+    request_datapoints
+        { from_timestamp =
+            maybe_now
+                |> Maybe.andThen (\n -> Just (n - 30 * 24 * 3600))
+        , count = Just 30
+        }
 
 
 init : Nav.Key -> ( Model, Cmd Msg )
 init nav_key =
     ( { nav_key = nav_key
+      , time = Nothing
       , datapoints = Nothing
       , last_error = Nothing
       }
-    , request_last_day
+    , Task.perform GotTime Time.now
     )

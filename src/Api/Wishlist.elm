@@ -8,7 +8,6 @@ import Json.Encode as E
 
 type alias Wishlist =
     { timestamp : Int
-    , value : Int
     , products : List Product.Product
     }
 
@@ -17,5 +16,4 @@ decoder : D.Decoder Wishlist
 decoder =
     D.succeed Wishlist
         |> required "timestamp" D.int
-        |> required "value" D.int
         |> required "products" (D.list Product.decoder)
