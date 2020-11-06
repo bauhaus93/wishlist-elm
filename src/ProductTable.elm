@@ -86,7 +86,7 @@ get_price_quantity prod =
                     " x " ++ String.fromInt n
     in
     String.join ""
-        [ format_currency "€" <| toFloat prod.price / 100.0
+        [ format_currency "€" prod.price
         , quantity
         ]
 

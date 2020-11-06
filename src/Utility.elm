@@ -84,25 +84,34 @@ leading_zeroes max_len str =
     zeroes ++ str
 
 
-format_currency : String -> Float -> String
+format_currency : String -> Int -> String
 format_currency unit value =
     let
-        needs_zero =
-            abs value
-                |> (*) 100
-                |> floor
-                |> modBy 100
-                |> (\n -> n /= 0 && modBy 10 n == 0)
+        whole_str =
+            String.fromInt <| value // 100
+
+        fractional =
+            modBy 100 value
+
+        fractional_str =
+            case fractional of
+                0 ->
+                    ""
+
+                n ->
+                    "."
+                        ++ (case modBy n 10 == 0 of
+                                True ->
+                                    String.fromInt fractional ++ "0"
+
+                                False ->
+                                    String.fromInt fractional
+                           )
     in
     unit
         ++ " "
-        ++ (case needs_zero of
-                True ->
-                    String.fromFloat value ++ "0"
-
-                False ->
-                    String.fromFloat value
-           )
+        ++ whole_str
+        ++ fractional_str
 
 
 month_to_num : Time.Month -> Int

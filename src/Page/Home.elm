@@ -124,8 +124,6 @@ view_wishlist_info wishlist =
 
         wishlist_value =
             List.foldr (\p -> \acc -> acc + (p.price * p.quantity)) 0 wishlist.products
-                |> toFloat
-                |> (*) 1.0e-2
     in
     table [ class "table table-responsive table-sm" ]
         [ tbody []
