@@ -93,6 +93,14 @@ subscriptions model =
 
 view : Model -> ViewInfo Msg
 view model =
+    { title = "{{ PAGE.TITLE }}"
+    , caption = "{{ PAGE.TIMELINE.CAPTION }}"
+    , content = div [] [ wrap_row_col <| view_chart model.datapoints, wrap_row_col_centered <| view_request_buttons ]
+    }
+
+
+view_request_buttons : Html Msg
+view_request_buttons =
     let
         timespan_button : Msg -> Bool -> String -> Html Msg
         timespan_button msg is_active label_string =
@@ -102,59 +110,60 @@ view model =
                 ]
 
         request_buttons =
-            div [ class "btn-group btn-group-toggle", attribute "data-toggle" "buttons" ]
-                [ timespan_button RequestLastDay True "{{ LABEL.LAST_DAY }}"
-                , timespan_button RequestLastWeek False "{{ LABEL.LAST_WEEK }}"
-                , timespan_button RequestLastMonth False "{{ LABEL.LAST_MONTH }}"
-                , timespan_button RequestLast3Month False "{{ LABEL.LAST_3MONTH }}"
-                , timespan_button RequestLastYear False "{{ LABEL.LAST_YEAR }}"
-                ]
-
-        chart =
-            case model.datapoints of
-                Just datapoints ->
-                    let
-                        slices =
-                            List.map (\d -> d.slice) datapoints
-
-                        high =
-                            List.maximum slices
-                                |> Maybe.withDefault 0
-
-                        low =
-                            List.minimum slices
-                                |> Maybe.withDefault 0
-
-                        timespan =
-                            high - low
-
-                        chart_config =
-                            { x = x_axis_config timespan
-                            , y = Axis.default 400 "{{ LABEL.VALUE }}" .value
-                            , container = Container.responsive "chart-1"
-                            , interpolation = Interpolation.monotone
-                            , intersection = Intersection.default
-                            , legends = Legends.none
-                            , events = Events.default
-                            , junk = Junk.default
-                            , grid = Grid.default
-                            , area = Area.default
-                            , line = Line.wider 2.0
-                            , dots = Dots.default
-                            }
-
-                        prepared_datapoints =
-                            List.map (\d -> { slice = d.slice, value = toFloat d.value / 100.0 }) datapoints
-                    in
-                    LineChart.viewCustom chart_config [ LineChart.line Colors.blue Dots.none "{{ LABEL.VALUE }}" prepared_datapoints ]
-
-                Nothing ->
-                    div [] []
+            [ timespan_button RequestLastDay True "{{ LABEL.LAST_DAY }}"
+            , timespan_button RequestLastWeek False "{{ LABEL.LAST_WEEK }}"
+            , timespan_button RequestLastMonth False "{{ LABEL.LAST_MONTH }}"
+            , timespan_button RequestLast3Month False "{{ LABEL.LAST_3MONTH }}"
+            , timespan_button RequestLastYear False "{{ LABEL.LAST_YEAR }}"
+            ]
     in
-    { title = "{{ PAGE.TITLE }}"
-    , caption = "{{ PAGE.TIMELINE.CAPTION }}"
-    , content = div [] [ wrap_row_col chart, wrap_row_col_centered request_buttons ]
-    }
+    div []
+        [ div [ class "d-sm-none btn-group-vertical btn-group-toggle", attribute "data-toggle" "buttons" ] request_buttons
+        , div [ class "d-none d-sm-block btn-group btn-group-toggle", attribute "data-toggle" "buttons" ] request_buttons
+        ]
+
+
+view_chart : Maybe (List Datapoint) -> Html Msg
+view_chart maybe_datapoints =
+    case maybe_datapoints of
+        Just datapoints ->
+            let
+                slices =
+                    List.map (\d -> d.slice) datapoints
+
+                high =
+                    List.maximum slices
+                        |> Maybe.withDefault 0
+
+                low =
+                    List.minimum slices
+                        |> Maybe.withDefault 0
+
+                timespan =
+                    high - low
+
+                chart_config =
+                    { x = x_axis_config timespan
+                    , y = Axis.default 400 "{{ LABEL.VALUE }}" .value
+                    , container = Container.responsive "chart-1"
+                    , interpolation = Interpolation.monotone
+                    , intersection = Intersection.default
+                    , legends = Legends.none
+                    , events = Events.default
+                    , junk = Junk.default
+                    , grid = Grid.default
+                    , area = Area.default
+                    , line = Line.wider 2.0
+                    , dots = Dots.default
+                    }
+
+                prepared_datapoints =
+                    List.map (\d -> { slice = d.slice, value = toFloat d.value / 100.0 }) datapoints
+            in
+            LineChart.viewCustom chart_config [ LineChart.line Colors.blue Dots.none "{{ LABEL.VALUE }}" prepared_datapoints ]
+
+        Nothing ->
+            div [] []
 
 
 x_axis_config : Int -> Axis.Config { slice : Int, value : Float } msg
