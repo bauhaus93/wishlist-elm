@@ -32,6 +32,7 @@
     "DATE_RANGE": "Vorhanden",
     "DURATION": "Dauer",
     "TIME": "Zeit",
+    "TIMESPAN": "Zeitraum",
     "LAST_DAY": "1 Tag",
     "LAST_WEEK": "1 Woche",
     "LAST_MONTH": "1 Monat",

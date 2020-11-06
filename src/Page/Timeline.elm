@@ -116,32 +116,57 @@ view model =
 view_request_buttons : ActiveTimespan -> Html Msg
 view_request_buttons active_timespan =
     let
-        timespan_button : Msg -> ActiveTimespan -> String -> Html Msg
-        timespan_button msg button_timespan label_string =
-            let
-                focus_class =
-                    if active_timespan == button_timespan then
-                        " focus"
-
-                    else
-                        ""
-            in
-            label [ class <| "btn btn-secondary" ++ focus_class ]
-                [ input [ type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
-                , text label_string
-                ]
-
-        request_buttons =
-            [ timespan_button RequestLastDay LastDay "{{ LABEL.LAST_DAY }}"
-            , timespan_button RequestLastWeek LastWeek "{{ LABEL.LAST_WEEK }}"
-            , timespan_button RequestLastMonth LastMonth "{{ LABEL.LAST_MONTH }}"
-            , timespan_button RequestLast3Month Last3Month "{{ LABEL.LAST_3MONTH }}"
-            , timespan_button RequestLastYear LastYear "{{ LABEL.LAST_YEAR }}"
+        request_buttons : (Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg) -> List (Html Msg)
+        request_buttons wrap_fn =
+            [ wrap_fn RequestLastDay LastDay active_timespan "{{ LABEL.LAST_DAY }}"
+            , wrap_fn RequestLastWeek LastWeek active_timespan "{{ LABEL.LAST_WEEK }}"
+            , wrap_fn RequestLastMonth LastMonth active_timespan "{{ LABEL.LAST_MONTH }}"
+            , wrap_fn RequestLast3Month Last3Month active_timespan "{{ LABEL.LAST_3MONTH }}"
+            , wrap_fn RequestLastYear LastYear active_timespan "{{ LABEL.LAST_YEAR }}"
             ]
     in
     div []
-        [ div [ class "d-sm-none btn-group-vertical btn-group-toggle", attribute "data-toggle" "buttons" ] request_buttons
-        , div [ class "d-none d-sm-block btn-group btn-group-toggle", attribute "data-toggle" "buttons" ] request_buttons
+        [ div [ class "d-sm-none dropdown" ]
+            [ button [ class "btn btn-secondary dropdown-toggle", type_ "button", attribute "data-toggle" "dropdown" ]
+                [ text "{{ LABEL.TIMESPAN }}", span [ class "caret" ] [] ]
+            , ul [ class "dropdown-menu" ]
+                (List.map (\b -> li [] [ b ]) <| request_buttons dropdown_group_fn)
+            ]
+        , div [ class "d-none d-sm-block btn-group btn-group-toggle", attribute "data-toggle" "buttons" ] (request_buttons button_group_fn)
+        ]
+
+
+button_group_fn : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
+button_group_fn msg button_timespan active_timespan label_string =
+    let
+        focus_class =
+            if active_timespan == button_timespan then
+                " focus"
+
+            else
+                ""
+    in
+    label [ class <| "btn btn-secondary" ++ focus_class ]
+        [ input [ type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
+        , text label_string
+        ]
+
+
+dropdown_group_fn : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
+dropdown_group_fn msg button_timespan active_timespan label_string =
+    let
+        focus_class =
+            if active_timespan == button_timespan then
+                " focus"
+
+            else
+                ""
+    in
+    li []
+        [ label [ class <| "btn btn-block" ++ focus_class, attribute "style" "border-radius: 0px; margin: 0px;" ]
+            [ input [ class "d-none", type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
+            , text label_string
+            ]
         ]
 
 
