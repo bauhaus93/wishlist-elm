@@ -39,7 +39,16 @@ type alias Model =
     , time : Maybe Int
     , datapoints : Maybe (List Datapoint)
     , last_error : Maybe Error.Error
+    , active_timespan : ActiveTimespan
     }
+
+
+type ActiveTimespan
+    = LastDay
+    | LastWeek
+    | LastMonth
+    | Last3Month
+    | LastYear
 
 
 type Msg
@@ -60,7 +69,7 @@ update msg model =
                 timestamp =
                     Just (Time.posixToMillis time // 1000)
             in
-            ( { model | time = timestamp }, request_days 1 timestamp )
+            ( { model | time = timestamp, active_timespan = LastDay }, request_days 1 timestamp )
 
         GotDatapoints result ->
             case result of
@@ -71,19 +80,19 @@ update msg model =
                     ( { model | last_error = Just (Error.HttpRequest e) }, Nav.pushUrl (to_nav_key model) (Route.to_string Route.Error) )
 
         RequestLastDay ->
-            ( model, request_days 1 model.time )
+            ( { model | active_timespan = LastDay }, request_days 1 model.time )
 
         RequestLastWeek ->
-            ( model, request_weeks 1 model.time )
+            ( { model | active_timespan = LastWeek }, request_weeks 1 model.time )
 
         RequestLastMonth ->
-            ( model, request_months 1 model.time )
+            ( { model | active_timespan = LastMonth }, request_months 1 model.time )
 
         RequestLast3Month ->
-            ( model, request_months 3 model.time )
+            ( { model | active_timespan = Last3Month }, request_months 3 model.time )
 
         RequestLastYear ->
-            ( model, request_years 1 model.time )
+            ( { model | active_timespan = LastYear }, request_years 1 model.time )
 
 
 subscriptions : Model -> Sub Msg
@@ -95,26 +104,39 @@ view : Model -> ViewInfo Msg
 view model =
     { title = "{{ PAGE.TITLE }}"
     , caption = "{{ PAGE.TIMELINE.CAPTION }}"
-    , content = div [] [ wrap_row_col <| view_chart model.datapoints, wrap_row_col_centered <| view_request_buttons ]
+    , content =
+        div []
+            [ wrap_row_col <| view_chart model.datapoints
+            , wrap_row_col_centered <|
+                view_request_buttons model.active_timespan
+            ]
     }
 
 
-view_request_buttons : Html Msg
-view_request_buttons =
+view_request_buttons : ActiveTimespan -> Html Msg
+view_request_buttons active_timespan =
     let
-        timespan_button : Msg -> Bool -> String -> Html Msg
-        timespan_button msg is_active label_string =
-            label [ class "btn btn-secondary" ]
+        timespan_button : Msg -> ActiveTimespan -> String -> Html Msg
+        timespan_button msg button_timespan label_string =
+            let
+                focus_class =
+                    if active_timespan == button_timespan then
+                        " focus"
+
+                    else
+                        ""
+            in
+            label [ class <| "btn btn-secondary" ++ focus_class ]
                 [ input [ type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
                 , text label_string
                 ]
 
         request_buttons =
-            [ timespan_button RequestLastDay True "{{ LABEL.LAST_DAY }}"
-            , timespan_button RequestLastWeek False "{{ LABEL.LAST_WEEK }}"
-            , timespan_button RequestLastMonth False "{{ LABEL.LAST_MONTH }}"
-            , timespan_button RequestLast3Month False "{{ LABEL.LAST_3MONTH }}"
-            , timespan_button RequestLastYear False "{{ LABEL.LAST_YEAR }}"
+            [ timespan_button RequestLastDay LastDay "{{ LABEL.LAST_DAY }}"
+            , timespan_button RequestLastWeek LastWeek "{{ LABEL.LAST_WEEK }}"
+            , timespan_button RequestLastMonth LastMonth "{{ LABEL.LAST_MONTH }}"
+            , timespan_button RequestLast3Month Last3Month "{{ LABEL.LAST_3MONTH }}"
+            , timespan_button RequestLastYear LastYear "{{ LABEL.LAST_YEAR }}"
             ]
     in
     div []
@@ -259,6 +281,7 @@ init nav_key =
       , time = Nothing
       , datapoints = Nothing
       , last_error = Nothing
+      , active_timespan = LastDay
       }
     , Task.perform GotTime Time.now
     )

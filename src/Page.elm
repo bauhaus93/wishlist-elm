@@ -52,9 +52,15 @@ view_navbar =
                 (\{ route, label } ->
                     li [ class "nav-item" ]
                         [ a
-                            [ class "nav-link"
+                            [ class "nav-link d-sm-none"
                             , href (Route.to_string route)
                             , attribute "data-toggle" "collapse"
+                            , attribute "data-target" "#navbarSupportedContent"
+                            ]
+                            [ text label ]
+                        , a
+                            [ class "nav-link d-none d-sm-block"
+                            , href (Route.to_string route)
                             , attribute "data-target" "#navbarSupportedContent"
                             ]
                             [ text label ]
