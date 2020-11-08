@@ -4,6 +4,7 @@ import Api.Datapoint exposing (Datapoint)
 import ApiRoute
 import Browser
 import Browser.Navigation as Nav
+import ButtonGroup exposing (view_button, view_button_dropdown, view_button_group, view_button_group_dropdown)
 import Error
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -31,7 +32,7 @@ import Page exposing (ViewInfo)
 import Route
 import Task
 import Time
-import Utility exposing (timestamp_to_dm, timestamp_to_hm, wrap_row_col, wrap_row_col_centered)
+import Utility exposing (timestamp_to_dm, timestamp_to_hm, wrap_responsive_alternative_sm, wrap_row_col, wrap_row_col_centered)
 
 
 type alias Model =
@@ -116,28 +117,22 @@ view model =
 view_request_buttons : ActiveTimespan -> Html Msg
 view_request_buttons active_timespan =
     let
-        request_buttons : (Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg) -> List (Html Msg)
-        request_buttons wrap_fn =
-            [ wrap_fn RequestLastDay LastDay active_timespan "{{ LABEL.LAST_DAY }}"
-            , wrap_fn RequestLastWeek LastWeek active_timespan "{{ LABEL.LAST_WEEK }}"
-            , wrap_fn RequestLastMonth LastMonth active_timespan "{{ LABEL.LAST_MONTH }}"
-            , wrap_fn RequestLast3Month Last3Month active_timespan "{{ LABEL.LAST_3MONTH }}"
-            , wrap_fn RequestLastYear LastYear active_timespan "{{ LABEL.LAST_YEAR }}"
+        buttons : (Msg -> Bool -> String -> Html Msg) -> List (Html Msg)
+        buttons wrap_fn =
+            [ wrap_fn RequestLastDay (active_timespan == LastDay) "{{ LABEL.LAST_DAY }}"
+            , wrap_fn RequestLastWeek (active_timespan == LastWeek) "{{ LABEL.LAST_WEEK }}"
+            , wrap_fn RequestLastMonth (active_timespan == LastMonth) "{{ LABEL.LAST_MONTH }}"
+            , wrap_fn RequestLast3Month (active_timespan == Last3Month) "{{ LABEL.LAST_3MONTH }}"
+            , wrap_fn RequestLastYear (active_timespan == LastYear) "{{ LABEL.LAST_YEAR }}"
             ]
     in
-    div []
-        [ div [ class "d-sm-none dropdown" ]
-            [ button [ class "btn btn-secondary dropdown-toggle", type_ "button", attribute "data-toggle" "dropdown" ]
-                [ text "{{ LABEL.TIMESPAN }}", span [ class "caret" ] [] ]
-            , ul [ class "dropdown-menu" ]
-                (List.map (\b -> li [] [ b ]) <| request_buttons dropdown_group_fn)
-            ]
-        , div [ class "d-none d-sm-block btn-group btn-group-toggle", attribute "data-toggle" "buttons" ] (request_buttons button_group_fn)
-        ]
+    wrap_responsive_alternative_sm
+        (view_button_group_dropdown "{{ LABEL.TIMESPAN }}" <| buttons view_button_dropdown)
+        (view_button_group (buttons view_button))
 
 
-button_group_fn : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
-button_group_fn msg button_timespan active_timespan label_string =
+to_grouped_button : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
+to_grouped_button msg button_timespan active_timespan label_string =
     let
         focus_class =
             if active_timespan == button_timespan then
@@ -147,13 +142,19 @@ button_group_fn msg button_timespan active_timespan label_string =
                 ""
     in
     label [ class <| "btn btn-secondary" ++ focus_class ]
-        [ input [ type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
+        [ input
+            [ type_ "radio"
+            , name "timespan"
+            , attribute "autocomplete" "off"
+            , onClick msg
+            ]
+            []
         , text label_string
         ]
 
 
-dropdown_group_fn : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
-dropdown_group_fn msg button_timespan active_timespan label_string =
+to_dropdown_element : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg
+to_dropdown_element msg button_timespan active_timespan label_string =
     let
         focus_class =
             if active_timespan == button_timespan then
@@ -162,11 +163,16 @@ dropdown_group_fn msg button_timespan active_timespan label_string =
             else
                 ""
     in
-    li []
-        [ label [ class <| "btn btn-block" ++ focus_class, attribute "style" "border-radius: 0px; margin: 0px;" ]
-            [ input [ class "d-none", type_ "radio", name "timespan", attribute "autocomplete" "off", onClick msg ] []
-            , text label_string
+    label [ class <| "btn btn-block" ++ focus_class, attribute "style" "border-radius: 0px; margin: 0px;" ]
+        [ input
+            [ class "d-none"
+            , type_ "radio"
+            , name "timespan"
+            , attribute "autocomplete" "off"
+            , onClick msg
             ]
+            []
+        , text label_string
         ]
 
 

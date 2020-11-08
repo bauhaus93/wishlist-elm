@@ -1,6 +1,7 @@
 module Pagination exposing (Model, Msg(..), init, to_items, to_last_error, update, view)
 
 import ApiRoute exposing (ApiRoute)
+import ButtonGroup exposing (view_button, view_button_group)
 import Dict
 import Error
 import Html exposing (..)
@@ -77,31 +78,28 @@ update msg model =
 view : Model a -> Html (Msg a)
 view model =
     let
-        page_direct_buttons =
+        direct_buttons =
             case model.max_page of
                 Just max ->
                     List.map (\i -> view_page_entry i model.curr_page) (List.range 1 max)
-                        |> div []
 
                 Nothing ->
-                    div [] []
+                    []
 
         full_pagination =
             case List.isEmpty model.items of
                 True ->
-                    []
+                    div [] []
 
                 False ->
-                    [ div [ class "btn-group" ]
-                        [ button [ class "btn btn-secondary font-weight-bold", onClick PrevPage ] [ text "<" ]
-                        , page_direct_buttons
-                        , button [ class "btn btn-secondary font-weight-bold", onClick NextPage ] [ text ">" ]
-                        ]
-                    ]
+                    view_button_group <|
+                        [ view_button PrevPage False "<" ]
+                            ++ direct_buttons
+                            ++ [ view_button NextPage False ">" ]
     in
     div [ class "row my-3" ]
         [ div [ class "col text-center" ]
-            full_pagination
+            [ full_pagination ]
         ]
 
 
@@ -119,15 +117,7 @@ init request_route decoder =
 
 view_page_entry : Int -> Int -> Html (Msg a)
 view_page_entry entry_page curr_page =
-    let
-        weight =
-            if entry_page == curr_page then
-                " font-weight-bold active"
-
-            else
-                ""
-    in
-    button [ class ("btn btn-secondary" ++ weight), onClick (ExactPage entry_page), attribute "style" "border-radius: 0px;" ] [ text (String.fromInt entry_page) ]
+    view_button (ExactPage entry_page) (entry_page == curr_page) (String.fromInt entry_page)
 
 
 to_items : Model a -> List a

@@ -1,9 +1,27 @@
-module Utility exposing (format_currency, leading_zeroes, month_to_num, timestamp_to_dm, timestamp_to_dmy, timestamp_to_hm, wrap_row_col, wrap_row_col_centered)
+module Utility exposing (format_currency, leading_zeroes, month_to_num, timestamp_to_dm, timestamp_to_dmy, timestamp_to_hm, wrap_responsive_alternative_sm, wrap_row_col, wrap_row_col_centered)
 
 import Array
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Time
+
+
+wrap_show_sm_down : Html msg -> Html msg
+wrap_show_sm_down wrapped =
+    div [ class "d-sm-none" ] [ wrapped ]
+
+
+wrap_show_sm_up : Html msg -> Html msg
+wrap_show_sm_up wrapped =
+    div [ class "d-none d-sm-block" ] [ wrapped ]
+
+
+wrap_responsive_alternative_sm : Html msg -> Html msg -> Html msg
+wrap_responsive_alternative_sm content_sm content_sm_up =
+    div []
+        [ wrap_show_sm_down content_sm
+        , wrap_show_sm_up content_sm_up
+        ]
 
 
 wrap_row_col : Html msg -> Html msg
