@@ -12,7 +12,7 @@
     "build:elm-debug": "elm make src/Main.elm --output='build/elm.min.mustache.js'",
     "build:min": "uglifyjs 'build/elm.mustache.js' --compress 'pure_funcs=[F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9],pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output 'build/elm.min.mustache.js'",
     "build:lang-default": "mustache localization/default.json build/elm.min.mustache.js > app/public/elm.min.js",
-    "compress": "npm run build && gzip -rc package.json app > archive.gz",
+    "zip": "npm run build && zip -r deploy.zip package.json app",
     "deploy": "heroku container:push web && heroku container:release web"
   },
   "author": "Jakob Fischer",

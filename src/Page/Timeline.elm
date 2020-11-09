@@ -108,8 +108,10 @@ view model =
     , content =
         div []
             [ wrap_row_col <| view_chart model.datapoints
-            , wrap_row_col_centered <|
-                view_request_buttons model.active_timespan
+            , wrap_row_col <|
+                div [ class "fixed-bottom my-3 mx-3" ]
+                    [ view_request_buttons model.active_timespan
+                    ]
             ]
     }
 
@@ -127,8 +129,8 @@ view_request_buttons active_timespan =
             ]
     in
     wrap_responsive_alternative_sm
-        (view_button_group_dropdown "{{ LABEL.TIMESPAN }}" <| buttons view_button_dropdown)
-        (view_button_group (buttons view_button))
+        (div [ class "text-right" ] [ view_button_group_dropdown "{{ LABEL.TIMESPAN }}" <| buttons view_button_dropdown ])
+        (div [ class "text-center" ] [ view_button_group (buttons view_button) ])
 
 
 to_grouped_button : Msg -> ActiveTimespan -> ActiveTimespan -> String -> Html Msg

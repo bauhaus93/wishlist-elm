@@ -4,3 +4,4 @@ build
 */public/*.js
 package-lock.json
 .env*
+*.zip
