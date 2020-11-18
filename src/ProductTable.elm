@@ -10,33 +10,17 @@ import Utility exposing (format_currency, month_to_num, timestamp_to_dmy)
 view_product_table : Bool -> List Product -> Html msg
 view_product_table shorten_names products =
     let
-        items =
-            List.map to_list_item products
+        item_views =
+            List.map view_item products
                 |> List.foldr (++) []
+    in
+    table [ class "table table-responsive table-sm" ]
+        [ tbody [] item_views ]
 
-        to_list_item : Product -> List (Html msg)
-        to_list_item prod =
-            [ tr []
-                [ td [] [ img [ src prod.url_img, class "img-responsive", alt "{{ PRODUCT_IMG_ALT }}" ] [] ]
-                , th [ attribute "colspan" "2", class "align-middle" ]
-                    [ a [ href prod.url, target "_blank" ]
-                        [ text
-                            (case shorten_names of
-                                True ->
-                                    shorten_product_name prod.name
 
-                                False ->
-                                    prod.name
-                            )
-                        ]
-                    ]
-                ]
-            , view_row "{{ LABEL.VALUE }}" <| text (get_price_quantity prod)
-            , view_row "{{ LABEL.WISHLIST_NAME }}" <| a [ href prod.source.url, target "_blank" ] [ text prod.source.name ]
-            , view_row "{{ LABEL.DATE_RANGE }}" <| text (get_date_range prod)
-            , view_row "{{ LABEL.DURATION }}" <| text (get_duration prod)
-            ]
-
+view_item : Product -> List (Html msg)
+view_item product =
+    let
         view_row : String -> Html msg -> Html msg
         view_row caption value =
             tr []
@@ -44,8 +28,19 @@ view_product_table shorten_names products =
                 , td [] [ value ]
                 ]
     in
-    table [ class "table table-responsive table-sm" ]
-        [ tbody [] items ]
+    [ tr []
+        [ td [] [ img [ src product.url_img, class "img-responsive", alt "{{ PRODUCT_IMG_ALT }}" ] [] ]
+        , th [ attribute "colspan" "2", class "align-middle" ]
+            [ a [ href product.url, target "_blank" ]
+                [ text <| shorten_product_name product.name
+                ]
+            ]
+        ]
+    , view_row "{{ LABEL.VALUE }}" <| text (get_price_quantity product)
+    , view_row "{{ LABEL.WISHLIST_NAME }}" <| a [ href product.source.url, target "_blank" ] [ text product.source.name ]
+    , view_row "{{ LABEL.DATE_RANGE }}" <| text (get_date_range product)
+    , view_row "{{ LABEL.DURATION }}" <| text (get_duration product)
+    ]
 
 
 shorten_product_name : String -> String
